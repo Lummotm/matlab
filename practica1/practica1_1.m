@@ -1,147 +1,169 @@
-function practica1_1(choice,J)
-
-    % Función auxiliar para verificar que un valor es entero
-    % Fuente: https://www.analyticslane.com/2022/02/09/comprobar-si-un-valor-es-entero-en-matlab/
-    isint = @(x) round(x) == x;
+function practica1_1(choiceMethod)
+    % Error máximo (se supone que es un problema de precisión de matlab)
+    EMAX=1e18;
 
     % Comprobación de inputs opcionales
-    if nargin < 1 || isempty(choice)
-        choice = 0;
-    end
-    if nargin < 2 || isempty(J)
-        J = input("Introduce el número de nodos: ");
-        % Verificar que J sea un entero positivo
-        while ~isint(J) || J <= 0
-            disp("El valor de J debe ser un entero positivo.")
-            J = input("Introduce el número de nodos: ");
-        end
+    if nargin < 1 || isempty(choiceMethod)
+        choiceMethod = 0;
     end
 
-    % Opciones válidas para el método
-    validOptions = [1:3];
-    % Pedir método hasta que se introduzca una opción válida
-    while ~ismember(choice,validOptions)
+    validMethods = 1:3;
+    while ~ismember(choiceMethod, validMethods)
         disp("=== Métodos de resolución ===");
         disp("1) Explícito");
         disp("2) Implícito");
         disp("3) Crank-Nicolson");
-        choice = input("Selecciona un método [1-3]: ");
+        choiceMethod = input("Selecciona un método [1-3]: ");
     end
 
-
-    % Falta hacer la casuistica, teniendo en cuenta valores de k fijos y variando h y a la inversa
-    % Datos del problema
+    % Dato del problema
     T = 0.5;
-    % Definición de parámetros de la malla para estabilidad
-    h = 1/J;             % paso espacial
-    N = ceil(2*T/h^2);   % número de pasos de tiempo para cumplir mu <= 1/2
-    k = T/N;             % paso temporal
-    % Definición de la malla espacial
-    x = linspace(0,1,J+1)';
-    x = x(2:end-1);      % nodos internos (excluyendo contorno)
-    t = linspace(0,T,N+1)';
-    % Condición inicial (autofunción del problema)
-    u0_fun = @(x) sin(pi*x);
-    u0 = u0_fun(x);
-    % Parámetro de estabilidad
-    mu = k/h^2;
 
-    % x sera los nodos de x, mientras que t sera un t para cada tiempo
+    % Condiciones iniciales 
+    u0_fun = @(x) (sin(pi*x)); % autofunción 
+
+    % Función de solución 
     u_exact = @(x,t) (sin(pi*x) .* exp(-pi^2 *t));
 
-    % Llamada al solver correspondiente
+
+    % Indice de iteracion (valores de h y k que van a haber)
+    L = 5;
+
+
+    % Hago print de la primera fila en la tabla
+    fprintf("  k     |   h   ")
+    %fprintf("k|h\t")
+    for l = 1:L
+        H(l) = 10^(-l);
+        fprintf("|%.6e\t",H(l));
+    end
+    K = H;
+
+
+    % k/h | h1 | h2 | h3 | h4 
+    % k1 | e1 | e2 | e3
+
+
+    for i = 1:L 
+        k = K(i);
+        fprintf("\n%.6e\t",k);
+        for m = 1:L 
+            h = H(m);  % Variamos h
+            mu = k / h^2;
+            J = ceil(1 / h);       % nodos totales
+            N = ceil(T / k);       % pasos de tiempo
+
+            % Definición de la malla
+            t = linspace(0,T,N+1)';
+            x = linspace(0,1,J+1)';
+            x = x(2:end-1);        % nodos internos
+
+            % Evaluación de la condición inicial
+            u0 = u0_fun(x);
+
+            [time, errors] = solver_selection(choiceMethod,J,N,mu,u0,x,t,u_exact);
+
+            errmax = max(errors);
+            if isinf(errmax) || isnan(errmax) || errmax >= EMAX
+                % Si el error se pasa de un error logico escribimos *** en vez del error
+                fprintf("|************\t")            
+            else
+                fprintf("|%.6e\t",errmax);           
+            end
+            times(:,i) = time;
+        end    
+    end
+    fprintf("\n")
+
+
+
+
+
+
+
+end
+
+function [time,errors] = solver_selection(choice,j,n,mu,u0,x,t,u_exact)
+    % llamada al solver correspondiente
     switch choice
     case 1
         tic
-        [u, errors] = solve_explicito(J,N,mu,u0,x,t,u_exact);
-        toc
+        [~, errors] = solve_explicito(j,n,mu,u0,x,t,u_exact);
+        time = toc;
     case 2
         tic
-        [u, errors] = solve_implicito(J,N,mu,u0,x,t,u_exact);
-        toc
+        [~, errors] = solve_implicito(j,n,mu,u0,x,t,u_exact);
+        time = toc;
     case 3
         tic
-        [u, errors] = solve_crank(J,N,mu,u0,x,t,u_exact);
-        toc
+        [~, errors] = solve_crank(j,n,mu,u0,x,t,u_exact);
+        time = toc;
     end
-
-    fprintf('Error en t=0: %.6e\n', errors(1));
-    fprintf('Error en t=T: %.6e\n', errors(end));
-    fprintf('Error máximo: %.6e\n', max(errors(2:end)));
-    fprintf('Error mínimo: %.6e\n', min(errors(2:end)));
-
-    figure;
-    loglog(t, errors, 'o-');
-    xlabel('Tiempo t');
-    ylabel('Error máximo');
-    title('Error máximo vs tiempo (log-log)');
-    grid on;
 end
 
-function [u, errors] = solve_explicito(J,N,mu,u,x,t,u_exact)
-    % Defino matriz dispersa del problema
-    A = spdiags([mu 1-2*mu mu],-1:1,J-1,J-1);
+function [u, errors] = solve_explicito(j,n,mu,u,x,t,u_exact)
+    errors = zeros(1,n+1);    
+    if mu >= 1/2    
+        errors(1) = 1e30;
+    else
+        % defino matriz dispersa del problema
+        a = spdiags([mu 1-2*mu mu],-1:1,j-1,j-1);
 
-    % Vector para almacenar errores
-    errors = zeros(1,N+1);
+        % vector para almacenar errores
+        errors = zeros(1,n+1);
 
-    % Error en t=0
+        % error en t=0
+        u_ex = u_exact(x, t(1));
+        errors(1) = max(abs(u - u_ex));
+
+        % iteramos en cada paso de tiempo
+        for n = 1:n
+            u = a * u;
+            % calcular error en este paso de tiempo
+            u_ex = u_exact(x, t(n+1));
+            errors(n+1) = max(abs(u - u_ex));
+        end
+    end
+
+end
+
+function [u, errors] = solve_implicito(j,n,mu,u,x,t,u_exact)
+    % defino matriz dispersa del problema
+    a = spdiags([-mu 1+2*mu -mu],-1:1,j-1,j-1);
+    da = decomposition(a);
+
+    % vector para almacenar errores
+    errors = zeros(1,n+1);
+
+    % error en t=0
     u_ex = u_exact(x, t(1));
     errors(1) = max(abs(u - u_ex));
 
-    % Iteramos en el cada orden de tiempo
-    % En el metodo explicito las iteraciones son de la forma u_n+1 = A * u_n
-    for n = 1:N
-        u = A * u;
-        % Calcular error en este paso de tiempo
+    for n = 1:n
+        u = da \ u;
+        % calcular error en este paso de tiempo
         u_ex = u_exact(x, t(n+1));
         errors(n+1) = max(abs(u - u_ex));
     end
-
-    u = [0; u; 0];
 end
 
-function [u, errors] = solve_implicito(J,N,mu,u,x,t,u_exact)
-    % Defino matriz dispersa del problema
-    A = spdiags([-mu 1+2*mu -mu],-1:1,J-1,J-1);
-    dA = decomposition(A);
-
-    % Vector para almacenar errores
-    errors = zeros(1,N+1);
-
-    % Error en t=0
-    u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex));
-
-    for n = 1:N
-        u = dA \ u;
-        % Calcular error en este paso de tiempo
-        u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex));
-    end
-
-    u = [0; u; 0];
-end
-
-function [u, errors] = solve_crank(J,N,mu,u,x,t,u_exact)
+function [u, errors] = solve_crank(j,n,mu,u,x,t,u_exact)
     temp = mu/2;
-    A = spdiags([-temp 1+mu -temp],-1:1,J-1,J-1);
-    B = spdiags([-temp 1-mu -temp],-1:1,J-1,J-1);   
-    dA = decomposition(A);
+    a = spdiags([-temp 1+mu -temp],-1:1,j-1,j-1);
+    b = spdiags([-temp 1-mu -temp],-1:1,j-1,j-1);   
+    da = decomposition(a);
 
-    % Vector para almacenar errores
-    errors = zeros(1,N+1);
+    % vector para almacenar errores
+    errors = zeros(1,n+1);
 
-    % Error en t=0
+    % error en t=0
     u_ex = u_exact(x, t(1));
     errors(1) = max(abs(u - u_ex));
 
-    for n = 1:N
-        u = dA \ (B * u);
-        % Calcular error en este paso de tiempo
+    for n = 1:n
+        u = da \ (b * u);
+        % calcular error en este paso de tiempo
         u_ex = u_exact(x, t(n+1));
         errors(n+1) = max(abs(u - u_ex));
     end
-
-    u = [0; u; 0];
 end
