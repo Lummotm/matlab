@@ -39,11 +39,6 @@ function practica1_1(choiceMethod)
     end
     K = H;
 
-
-    % k/h | h1 | h2 | h3 | h4 
-    % k1 | e1 | e2 | e3
-
-
     for i = 1:L 
         k = K(i);
         fprintf("\n%.6e\t",k);
@@ -61,6 +56,7 @@ function practica1_1(choiceMethod)
             % Evaluación de la condición inicial
             u0 = u0_fun(x);
 
+            % Usamos tantas variables dentro de la función porque no repetir cuentas en cada uno de los métodos
             [time, errors] = solver_selection(choiceMethod,J,N,mu,u0,x,t,u_exact);
 
             errmax = max(errors);
@@ -74,13 +70,6 @@ function practica1_1(choiceMethod)
         end    
     end
     fprintf("\n")
-
-
-
-
-
-
-
 end
 
 function [time,errors] = solver_selection(choice,j,n,mu,u0,x,t,u_exact)
@@ -107,7 +96,7 @@ function [u, errors] = solve_explicito(j,n,mu,u,x,t,u_exact)
         errors(1) = 1e30;
     else
         % defino matriz dispersa del problema
-        a = spdiags([mu 1-2*mu mu],-1:1,j-1,j-1);
+        A = spdiags([mu 1-2*mu mu],-1:1,j-1,j-1);
 
         % vector para almacenar errores
         errors = zeros(1,n+1);
@@ -118,7 +107,7 @@ function [u, errors] = solve_explicito(j,n,mu,u,x,t,u_exact)
 
         % iteramos en cada paso de tiempo
         for n = 1:n
-            u = a * u;
+            u = A * u;
             % calcular error en este paso de tiempo
             u_ex = u_exact(x, t(n+1));
             errors(n+1) = max(abs(u - u_ex));
@@ -129,8 +118,8 @@ end
 
 function [u, errors] = solve_implicito(j,n,mu,u,x,t,u_exact)
     % defino matriz dispersa del problema
-    a = spdiags([-mu 1+2*mu -mu],-1:1,j-1,j-1);
-    da = decomposition(a);
+    A = spdiags([-mu 1+2*mu -mu],-1:1,j-1,j-1);
+    dA = decomposition(A);
 
     % vector para almacenar errores
     errors = zeros(1,n+1);
@@ -140,7 +129,7 @@ function [u, errors] = solve_implicito(j,n,mu,u,x,t,u_exact)
     errors(1) = max(abs(u - u_ex));
 
     for n = 1:n
-        u = da \ u;
+        u = dA \ u;
         % calcular error en este paso de tiempo
         u_ex = u_exact(x, t(n+1));
         errors(n+1) = max(abs(u - u_ex));
@@ -149,9 +138,9 @@ end
 
 function [u, errors] = solve_crank(j,n,mu,u,x,t,u_exact)
     temp = mu/2;
-    a = spdiags([-temp 1+mu -temp],-1:1,j-1,j-1);
-    b = spdiags([-temp 1-mu -temp],-1:1,j-1,j-1);   
-    da = decomposition(a);
+    A = spdiags([-temp 1+mu -temp],-1:1,j-1,j-1);
+    B = spdiags([-temp 1-mu -temp],-1:1,j-1,j-1);   
+    dA = decomposition(A);
 
     % vector para almacenar errores
     errors = zeros(1,n+1);
@@ -161,7 +150,7 @@ function [u, errors] = solve_crank(j,n,mu,u,x,t,u_exact)
     errors(1) = max(abs(u - u_ex));
 
     for n = 1:n
-        u = da \ (b * u);
+        u = dA \ (B * u);
         % calcular error en este paso de tiempo
         u_ex = u_exact(x, t(n+1));
         errors(n+1) = max(abs(u - u_ex));
