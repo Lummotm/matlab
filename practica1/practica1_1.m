@@ -1,4 +1,4 @@
-function practica1_1(choiceMethod)
+function [Times,Errors] = practica1_1(choiceMethod)
     % Error máximo (se supone que es un problema de precisión de matlab)
     EMAX=1e18;
 
@@ -26,22 +26,27 @@ function practica1_1(choiceMethod)
     u_exact = @(x,t) (sin(pi*x) .* exp(-pi^2 *t));
 
 
+    % Definición de vectores necesarios
+
+
     % Indice de iteracion (valores de h y k que van a haber)
     L = 5;
 
 
     % Hago print de la primera fila en la tabla
-    fprintf("  k     |   h   ")
+    % fprintf("  k     |   h   ")
     %fprintf("k|h\t")
     for l = 1:L
         H(l) = 10^(-l);
-        fprintf("|%.6e\t",H(l));
+        % fprintf("|%.6e\t",H(l));
     end
     K = H;
-
+    
+    Times = zeros(L,L);
+    Errors = Times;
     for i = 1:L 
         k = K(i);
-        fprintf("\n%.6e\t",k);
+        % fprintf("\n%.6e\t",k);
         for m = 1:L 
             h = H(m);  % Variamos h
             mu = k / h^2;
@@ -57,43 +62,68 @@ function practica1_1(choiceMethod)
             u0 = u0_fun(x);
 
             % Usamos tantas variables dentro de la función porque no repetir cuentas en cada uno de los métodos
-            [time, errors] = solver_selection(choiceMethod,J,N,mu,u0,x,t,u_exact);
+            [time, errors,u] = solver_selection(choiceMethod,J,N,mu,u0,x,t,u_exact);
 
             errmax = max(errors);
-            if isinf(errmax) || isnan(errmax) || errmax >= EMAX
-                % Si el error se pasa de un error logico escribimos *** en vez del error
-                fprintf("|************\t")            
-            else
-                fprintf("|%.6e\t",errmax);           
-            end
-            times(:,i) = time;
+            % if isinf(errmax) || isnan(errmax) || errmax >= EMAX
+            %     % Si el error se pasa de un error logico escribimos *** en vez del error
+            %     fprintf("|************\t")            
+            % else
+            %     fprintf("|%.6e\t",errmax);           
+            % end
+            Times(i,m) = time;
+            Errors(i,m) = errmax; 
         end    
     end
-    fprintf("\n")
+    % fprintf("\n")
+
+    % Graficamos 
+    % === GRÁFICAS CON k FIJO (variando h) ===
+    figure('Name', 'k fijo - variando h');
+    for i = 1:L
+        subplot(ceil(L/2), 2, i);
+        loglog(Times(i,:), Errors(i,:), 'o-', 'LineWidth', 1.5);
+        grid on;
+        xlabel('Tiempo de cómputo (s)');
+        ylabel('Error máximo');
+        title(sprintf('k = %.0e (h variable)', K(i)));
+    end
+
+    % === GRÁFICAS CON h FIJO (variando k) ===
+    figure('Name', 'h fijo - variando k');
+    for m = 1:L
+        subplot(ceil(L/2), 2, m);
+        loglog(Times(:,m), Errors(:,m), 's-', 'LineWidth', 1.5);
+        grid on;
+        xlabel('Tiempo de cómputo (s)');
+        ylabel('Error máximo');
+        title(sprintf('h = %.0e (k variable)', H(m)));
+    end
+
 end
 
-function [time,errors] = solver_selection(choice,j,n,mu,u0,x,t,u_exact)
+function [time,errors,u] = solver_selection(choice,j,n,mu,u0,x,t,u_exact)
     % llamada al solver correspondiente
     switch choice
     case 1
         tic
-        [~, errors] = solve_explicito(j,n,mu,u0,x,t,u_exact);
+        [u, errors] = solve_explicito(j,n,mu,u0,x,t,u_exact);
         time = toc;
     case 2
         tic
-        [~, errors] = solve_implicito(j,n,mu,u0,x,t,u_exact);
+        [u, errors] = solve_implicito(j,n,mu,u0,x,t,u_exact);
         time = toc;
     case 3
         tic
-        [~, errors] = solve_crank(j,n,mu,u0,x,t,u_exact);
+        [u, errors] = solve_crank(j,n,mu,u0,x,t,u_exact);
         time = toc;
     end
 end
 
 function [u, errors] = solve_explicito(j,n,mu,u,x,t,u_exact)
     errors = zeros(1,n+1);    
-    if mu >= 1/2    
-        errors(1) = 1e30;
+     if mu >= 1/2    
+         errors(1) = NaN;
     else
         % defino matriz dispersa del problema
         A = spdiags([mu 1-2*mu mu],-1:1,j-1,j-1);
