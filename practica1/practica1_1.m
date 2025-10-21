@@ -80,30 +80,31 @@ function [Times,Errors] = practica1_1(choiceMethod, J_values, N_values)
     end
 
     nombre_metodo = method_names{choiceMethod};
-
+    
     % 1) k fijo, variando h
-figure(1);
-clf;      
-hold on; 
+    figure(1);
+    clf;      
+    hold on; 
+    
+    legend_text = cell(L_n, 1); 
+    
+    for n = 1:L_n
+        loglog(Times(n,:), Errors(n,:), 'o-', 'LineWidth', 2, 'MarkerSize', 8);
+        legend_text{n} = sprintf('k = %.0e', k_values(n));
+    end
+    
+    hold off; 
+    
+    grid on;
+    xlabel('Tiempo de ejecución');
+    ylabel('Error máximo');
+    title('Comparación Error vs. Tiempo (k fijo, variando h)');
+    
+    legend(legend_text, 'Location', 'best');
+    
+    print("-f1", "k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
 
-legend_text = cell(L_n, 1); 
-
-for n = 1:L_n
-    loglog(Times(n,:), Errors(n,:), 'o-', 'LineWidth', 2, 'MarkerSize', 8);
-    legend_text{n} = sprintf('k = %.0e', k_values(n));
-end
-
-hold off; 
-
-grid on;
-xlabel('Tiempo de ejecución');
-ylabel('Error máximo');
-title('Comparación Error vs. Tiempo (k fijo, variando h)');
-
-legend(legend_text, 'Location', 'best');
-
-print("-f1", "k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
-
+    % 1) h fijo, variando k
     figure(2);
     clf;      
     hold on; 
@@ -127,13 +128,23 @@ print("-f1", "k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
     print("-f2", "h_fijo_var_k_COMBINADO_" + nombre_metodo, "-dpng");
 
     % 3) Eficiencia
-    figure(3); 
-    loglog(Times(:), Errors(:), 'o', 'MarkerSize', 8);
+    figure(3);
+    clf;      
+    hold on; 
+    
+    for n = 1:L_n
+        loglog(Times(n,:), Errors(n,:), 'o', 'MarkerSize', 8, 'LineWidth', 2);
+    end
+    
+    hold off; 
+    
     grid on;
     xlabel('Tiempo de cómputo (s)');
     ylabel('Error máximo');
     title(sprintf('Eficiencia: %s', nombre_metodo));
-    print("-f3", "eficiencia_" + nombre_metodo, "-dpng")
+    
+    legend(legend_text, 'Location', 'best');
+    print("-f3", "eficiencia_color_" + nombre_metodo, "-dpng")
 end
 
 function [time, errors, u] = solver_selection(choiceMethod, params, u0, u_exact)
@@ -171,12 +182,12 @@ function [u, errors] = solve_explicito(params, u, u_exact)
     A = spdiags([mu , (1-2*mu), mu], -1:1, J-1, J-1);
 
     u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex) ./ u_ex);
+        errors(1) = max(abs(u - u_ex)) / max(u_ex);
 
     for n = 1:N
         u = A * u;
         u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex) ./ u_ex);
+        errors(n+1) = max(abs(u - u_ex)) / max(u_ex);
     end
 end
 
@@ -193,13 +204,13 @@ function [u, errors] = solve_implicito(params, u, u_exact)
     errors = zeros(1, N+1);
 
     u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex) ./ u_ex);
+        errors(1) = max(abs(u - u_ex)) / max(u_ex);
 
 
     for n = 1:N
         u = dA \ u;
         u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex) ./ u_ex);
+        errors(n+1) = max(abs(u - u_ex)) / max(u_ex);
     end
 end
 
@@ -218,11 +229,11 @@ function [u, errors] = solve_crank(params, u, u_exact)
     errors = zeros(1, N+1);
 
     u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex) ./ u_ex);
+        errors(1) = max(abs(u - u_ex)) / max(u_ex);
 
     for n = 1:N
         u = dA \ (B * u);
         u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex) ./ u_ex);
+        errors(n+1) = max(abs(u - u_ex)) / max(u_ex);
     end
 end
