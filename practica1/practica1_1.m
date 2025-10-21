@@ -82,28 +82,50 @@ function [Times,Errors] = practica1_1(choiceMethod, J_values, N_values)
     nombre_metodo = method_names{choiceMethod};
 
     % 1) k fijo, variando h
-    figure(1);
-    for n = 1:L_n
-        subplot(ceil(L_n/2), 2, n);
-        loglog(Times(n,:), Errors(n,:), 'o-', 'LineWidth', 2, 'MarkerSize', 8);
-        grid on;
-        xlabel('Tiempo de ejecución');
-        ylabel('Error máximo');
-        title(sprintf('k = %.0e fijo, variando h', k_values(n)));
-    end
-    print("-f1", "k_fijo_var_h_" + nombre_metodo, "-dpng")
+figure(1);
+clf;      
+hold on; 
 
-    % 2) h fijo, variando k
+legend_text = cell(L_n, 1); 
+
+for n = 1:L_n
+    loglog(Times(n,:), Errors(n,:), 'o-', 'LineWidth', 2, 'MarkerSize', 8);
+    legend_text{n} = sprintf('k = %.0e', k_values(n));
+end
+
+hold off; 
+
+grid on;
+xlabel('Tiempo de ejecución');
+ylabel('Error máximo');
+title('Comparación Error vs. Tiempo (k fijo, variando h)');
+
+legend(legend_text, 'Location', 'best');
+
+print("-f1", "k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
+
     figure(2);
+    clf;      
+    hold on; 
+
+    legend_text = cell(L_j, 1); 
+
     for j = 1:L_j
-        subplot(ceil(L_n/2), 2, j);
-        loglog(Times(:,j), Errors(:,j), 's-', 'LineWidth', 2, 'MarkerSize', 8);
-        grid on;
-        xlabel('Tiempo de ejecución');
-        ylabel('Error máximo');
-        title(sprintf('h = %.0e fijo, variando k', h_values(j)));
+        loglog(Times(:,j), Errors(:,j), 'o-', 'LineWidth', 2, 'MarkerSize', 8);
+        legend_text{j} = sprintf('k = %.0e', k_values(j));
     end
-    print("-f2", "h_fijo_var_k_" + nombre_metodo, "-dpng")
+
+    hold off; 
+
+    grid on;
+    xlabel('Tiempo de ejecución');
+    ylabel('Error máximo');
+    title('Comparación Error vs. Tiempo (h fijo, variando j)');
+
+    legend(legend_text, 'Location', 'best');
+
+    print("-f2", "h_fijo_var_k_COMBINADO_" + nombre_metodo, "-dpng");
+
     % 3) Eficiencia
     figure(3); 
     loglog(Times(:), Errors(:), 'o', 'MarkerSize', 8);
@@ -172,7 +194,7 @@ function [u, errors] = solve_implicito(params, u, u_exact)
 
     u_ex = u_exact(x, t(1));
     errors(1) = max(abs(u - u_ex) ./ u_ex);
-        
+
 
     for n = 1:N
         u = dA \ u;
