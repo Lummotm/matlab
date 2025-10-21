@@ -149,12 +149,12 @@ function [u, errors] = solve_explicito(params, u, u_exact)
     A = spdiags([mu , (1-2*mu), mu], -1:1, J-1, J-1);
 
     u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex)) / u_ex;
+    errors(1) = max(abs(u - u_ex) ./ u_ex);
 
     for n = 1:N
         u = A * u;
         u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex)) / u_ex;
+        errors(n+1) = max(abs(u - u_ex) ./ u_ex);
     end
 end
 
@@ -171,13 +171,13 @@ function [u, errors] = solve_implicito(params, u, u_exact)
     errors = zeros(1, N+1);
 
     u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex))  / u_ex;
+    errors(1) = max(abs(u - u_ex) ./ u_ex);
         
 
     for n = 1:N
         u = dA \ u;
         u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex)) / u_ex;
+        errors(n+1) = max(abs(u - u_ex) ./ u_ex);
     end
 end
 
@@ -196,11 +196,11 @@ function [u, errors] = solve_crank(params, u, u_exact)
     errors = zeros(1, N+1);
 
     u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex));
+    errors(1) = max(abs(u - u_ex) ./ u_ex);
 
     for n = 1:N
         u = dA \ (B * u);
         u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex)) / u_ex;
+        errors(n+1) = max(abs(u - u_ex) ./ u_ex);
     end
 end
