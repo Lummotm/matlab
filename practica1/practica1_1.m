@@ -1,11 +1,11 @@
-function [Times,Errors,u,t,x] = practica1_1(choiceMethod, J_values, N_values)
+function [Times,Errors,U_int,t,x] = practica1_1(choiceMethod, J_values, N_values, choiceError)
     % Si quiere graficar, dar solo un valor de J, N en general el programa esta diseñado para obtener todas las graficas de una sola vez
     % Dato del problema
     T = 0.5;
 
     % Condiciones iniciales y solución exacta
-    u0_fun = @(x) sin(pi*x);
-    u_exact = @(x,t) sin(pi*x) .* exp(-pi^2 * t);
+    u0_fun = @(x) sin(2*pi*x);
+    u_exact = @(x,t) sin(2*pi*x) .* exp(-4*pi^2 * t);
 
     % Gestión de inputs
     if nargin < 1 || isempty(choiceMethod)
@@ -21,6 +21,14 @@ function [Times,Errors,u,t,x] = practica1_1(choiceMethod, J_values, N_values)
         % Uso 2.5 en vez de 2 ya que sino podria pasar qeu mu no este por
         % debajo por errores de redondeo
         N_values = 2.5*J_values.^2*T;
+    end
+
+    if nargin < 4 || isempty(choiceError)
+        disp("choiceError puede ser:")
+        disp("1: Error relativo")
+        disp("2: Error máximo")
+        disp("Como no se ha introducido nada, usamos error máximo.")
+        choiceError = 1; 
     end
 
     % Exigir el metodo y no crashear directamente si no se pasa nada
@@ -47,6 +55,9 @@ function [Times,Errors,u,t,x] = practica1_1(choiceMethod, J_values, N_values)
     Times = zeros(L_n, L_j);
     Errors = zeros(L_n, L_j);
 
+    % Inicialización de la matriz de la solución (solo se devolverá para un solo J, N)
+    U_int = [];
+
     for n = 1:L_n
         k = k_values(n);
         N = N_values(n);
@@ -71,11 +82,16 @@ function [Times,Errors,u,t,x] = practica1_1(choiceMethod, J_values, N_values)
             params.t = t; 
 
             % Resolver
-            [time, errors, u] = solver_selection(choiceMethod, params, u0, u_exact);
+            [time, errors, U_int_current] = solver_selection(choiceMethod, params, u0, u_exact, choiceError);
 
             errmax = max(errors);
             Times(n, j) = time;
             Errors(n, j) = errmax;
+
+            % Guardar la matriz de solución solo si es una única corrida (para visualización)
+            if L_n == 1 && L_j == 1
+                U_int = U_int_current;
+            end
         end
     end
 
@@ -102,9 +118,10 @@ function [Times,Errors,u,t,x] = practica1_1(choiceMethod, J_values, N_values)
 
         legend(legend_text_k, 'Location', 'best');
 
-        print("-f1", "k_fijo_var_h_COMBINADO_" + nombre_metodo + "\n", "-dpng");
+        % Corregido: removido "\n"
+        print("-f1", "k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
 
-        % 2) h fijo, variando k  (Cambié el 1) por 2) en el comentario)
+        % 2) h fijo, variando k
         figure(2);
         clf;      
         hold on; 
@@ -124,7 +141,8 @@ function [Times,Errors,u,t,x] = practica1_1(choiceMethod, J_values, N_values)
 
         legend(legend_text_h, 'Location', 'best');
 
-        print("-f2", "h_fijo_var_k_COMBINADO_" + nombre_metodo + "\n", "-dpng");
+        % Corregido: removido "\n"
+        print("-f2", "h_fijo_var_k_COMBINADO_" + nombre_metodo, "-dpng");
 
         % 3) Eficiencia
         figure(3);
@@ -143,34 +161,37 @@ function [Times,Errors,u,t,x] = practica1_1(choiceMethod, J_values, N_values)
 
         legend(legend_text_k, 'Location', 'best');
 
-        print("-f3", "eficiencia_" + nombre_metodo + "\n", "-dpng")
+        % Corregido: removido "\n"
+        print("-f3", "eficiencia_" + nombre_metodo, "-dpng")
     end
 end
 
-function [time, errors, u] = solver_selection(choiceMethod, params, u0, u_exact)
+
+
+function [time, errors, U_int] = solver_selection(choiceMethod, params, u0, u_exact, choiceError)
     switch choiceMethod
-        case 1
+    case 1
         if params.mu <= 1/2 
             tic;
-            [u, errors] = solve_explicito(params, u0, u_exact);
+            [U_int, errors] = solve_explicito(params, u0, u_exact, choiceError);
             time = toc;
         else 
             errors(:) = NaN;
             time = NaN;
-            u(:) = NaN;
+            U_int = NaN;
         end
     case 2
         tic;
-        [u, errors] = solve_implicito(params, u0, u_exact);
+        [U_int, errors] = solve_implicito(params, u0, u_exact, choiceError);
         time = toc;
     case 3
         tic;
-        [u, errors] = solve_crank(params, u0, u_exact);
+        [U_int, errors] = solve_crank(params, u0, u_exact, choiceError);
         time = toc;
     end
 end
 
-function [u, errors] = solve_explicito(params, u, u_exact)
+function [U_int, errors] = solve_explicito(params, u, u_exact, choiceError)
     J = params.J;
     N = params.N;
     mu = params.mu;
@@ -179,19 +200,32 @@ function [u, errors] = solve_explicito(params, u, u_exact)
 
     errors = zeros(1, N+1);
 
+    % Inicialización de la matriz de solución U (interior points)
+    U_int = zeros(J-1, N+1);
+    U_int(:, 1) = u; % Almacenar la condición inicial
+
     A = spdiags([mu , (1-2*mu), mu], -1:1, J-1, J-1);
 
     u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex)) / max(u_ex);
+    if choiceError == 1 
+        errors(1) = max(abs(u - u_ex)) / (max(u_ex) + eps) ;
+    elseif chioceError == 2 
+        errors(1) = max(abs(u - u_ex)); 
+    end
 
     for n = 1:N
         u = A * u;
+        U_int(:, n+1) = u; % Almacenar el paso de tiempo
         u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex)) / max(u_ex);
+        if choiceError == 1
+            errors(n+1) = max(abs(u - u_ex)) / (max(u_ex) + eps);
+        elseif  choiceError == 2
+            errors(n+1) = max(abs(u-u_ex));
+        end
     end
 end
 
-function [u, errors] = solve_implicito(params, u, u_exact)
+function [U_int, errors] = solve_implicito(params, u, u_exact, choiceError)
     J = params.J;
     N = params.N;
     mu = params.mu;
@@ -203,18 +237,27 @@ function [u, errors] = solve_implicito(params, u, u_exact)
 
     errors = zeros(1, N+1);
 
+    % Inicialización de la matriz de solución U (interior points)
+    U_int = zeros(J-1, N+1);
+    U_int(:, 1) = u; % Almacenar la condición inicial
+
     u_ex = u_exact(x, t(1));
     errors(1) = max(abs(u - u_ex)) / max(u_ex);
 
 
     for n = 1:N
         u = dA \ u;
+        U_int(:, n+1) = u; % Almacenar el paso de tiempo
         u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex)) / max(u_ex);
+        if choiceError == 1
+            errors(n+1) = max(abs(u - u_ex)) / (max(u_ex) + eps);
+        elseif  choiceError == 2
+            errors(n+1) = max(abs(u-u_ex));
+        end
     end
 end
 
-function [u, errors] = solve_crank(params, u, u_exact)
+function [U_int, errors] = solve_crank(params, u, u_exact, choiceError)
     J = params.J;
     N = params.N;
     mu = params.mu;
@@ -228,12 +271,21 @@ function [u, errors] = solve_crank(params, u, u_exact)
 
     errors = zeros(1, N+1);
 
+    % Inicialización de la matriz de solución U (interior points)
+    U_int = zeros(J-1, N+1);
+    U_int(:, 1) = u; % Almacenar la condición inicial
+
     u_ex = u_exact(x, t(1));
     errors(1) = max(abs(u - u_ex)) / max(u_ex);
 
     for n = 1:N
         u = dA \ (B * u);
+        U_int(:, n+1) = u; % Almacenar el paso de tiempo
         u_ex = u_exact(x, t(n+1));
-        errors(n+1) = max(abs(u - u_ex)) / max(u_ex);
+        if choiceError == 1
+            errors(n+1) = max(abs(u - u_ex)) / (max(u_ex) + eps);
+        elseif  choiceError == 2
+            errors(n+1) = max(abs(u-u_ex));
+        end
     end
 end
