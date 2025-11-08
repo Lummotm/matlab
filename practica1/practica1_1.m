@@ -1,63 +1,75 @@
-function [Times,Errors,U_int,t,x] = practica1_1(choiceMethod, J_values, N_values, choiceError)
-    % Si quiere graficar, dar solo un valor de J, N en general el programa esta diseñado para obtener todas las graficas de una sola vez
-    % Dato del problema
-    T = 0.5;
+function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J_values, N_values)
+    % El texto siguiente esta diseñado para que sea leido al usar help el esta función  
+    % Function practica1_1. 
+    % Resuelve la ecuación del calor 1D (u_t = u_xx)
+    % Input: (choiceMethod, choiceError, J_values, N_values)
+    % - choiceMethod: metodo escogido 
+    %       - 1) Explícito
+    %       - 2) Implícito
+    %       - 3) Crank-Nicolson
+    % - choiceError: forma de calcular el error
+    %       - 1) Relativo (ya que la funcion de por si tiende a 0)
+    %       - 2) Absoluto (en el caso de el imlicito le suele beneficiar un poco)
+    % - J_values: valores de J, peudes pasar un vector y el programa se encarga de ello usar cada uno para cada malla de h
+    % - N_values: valores de N, puedes pasar un escalar o un vector, si no se pasa nada, se considera el caso de mu = 1/2 para poder ejecutar el metodo explicito
 
-    % Condiciones iniciales y solución exacta
+    T = 0.5; % Tiempo final de la simulación
+
+    % Condiciones iniciales y solución exacta 
     u0_fun = @(x) sin(2*pi*x);
     u_exact = @(x,t) sin(2*pi*x) .* exp(-4*pi^2 * t);
 
-    % Gestión de inputs
     if nargin < 1 || isempty(choiceMethod)
-        choiceMethod = 0;
+        choiceMethod = 0; % Valor por defecto si no se introduce
     end
-
-    if nargin < 2 || isempty(J_values)
-        J_values = [100];
-    end
-
-    if nargin < 3 || isempty(N_values)
-        % Condición de estabilidad (mu <= 1/2 asegurado)
-        % Uso 2.5 en vez de 2 ya que sino podria pasar qeu mu no este por
-        % debajo por errores de redondeo
-        N_values = 2.5*J_values.^2*T;
-    end
-
-    if nargin < 4 || isempty(choiceError)
-        disp("choiceError puede ser:")
-        disp("1: Error relativo")
-        disp("2: Error máximo")
-        disp("Como no se ha introducido nada, usamos error máximo.")
+    
+    if nargin < 2 || isempty(choiceError)
+        disp("INFO: 'choiceError' no especificado. Usando 'Error Relativo' (1).")
+        disp("      (Opciones: 1=Relativo, 2=Absoluto)")
         choiceError = 1; 
     end
 
-    % Exigir el metodo y no crashear directamente si no se pasa nada
-    validMethods = 1:3;
-    while ~ismember(choiceMethod, validMethods)
-        disp("Métodos de resolución:");
-        disp("1) Explícito");
-        disp("2) Implícito");
-        disp("3) Crank-Nicolson");
-        choiceMethod = input("Selecciona un método [1-3]: ");
+    if nargin < 3 || isempty(J_values)
+        J_values = [100]; 
     end
 
+    if nargin < 4 || isempty(N_values)
+        % Si no se da, se calcula N para CUMPLIR LA CONDICIÓN DE ESTABILIDAD
+        % del método explícito (mu <= 1/2).
+        % mu = k/h^2 = (1 / (2.5 * J^2)) / (1/J^2) = 1/2.5 = 0.4
+        disp("INFO: 'N_values' no especificado. Calculando N por estabilidad (mu=0.4).")
+        N_values = 2.5 * J_values.^2 * T;
+    end
+
+    % Bucle 'while' para asegurar que el usuario elige un método válido.
+    validMethods = 1:3;
+    while ~ismember(choiceMethod, validMethods)
+        disp("---------------------------------")
+        disp("Escoja un método.");
+        disp("Métodos de resolución disponibles:");
+        disp("  1) Explícito");
+        disp("  2) Implícito");
+        disp("  3) Crank-Nicolson");
+        choiceMethod = input("Selecciona un método [1-3]: ");
+        disp("---------------------------------")
+    end
+
+    % Se usa para los nombres de las graficas que se guardaran posteriormente
     method_names = {'Explícito', 'Implícito', 'Crank-Nicolson'};
 
 
-    % Inicialización de los valores de k, h 
+
+    % Inicialización
     L_j = length(J_values);
     L_n = length(N_values); 
     h_values = 1 ./ J_values;
     k_values = T ./ N_values; 
 
-
-    % Inicialización de matrices de resultados
     Times = zeros(L_n, L_j);
     Errors = zeros(L_n, L_j);
-
-    % Inicialización de la matriz de la solución (solo se devolverá para un solo J, N)
     U_int = [];
 
+    % Iteramos
     for n = 1:L_n
         k = k_values(n);
         N = N_values(n);
@@ -88,7 +100,7 @@ function [Times,Errors,U_int,t,x] = practica1_1(choiceMethod, J_values, N_values
             Times(n, j) = time;
             Errors(n, j) = errmax;
 
-            % Guardar la matriz de solución solo si es una única corrida (para visualización)
+            % Guardamos la matriz, si se da un solo argumento para N,J
             if L_n == 1 && L_j == 1
                 U_int = U_int_current;
             end
@@ -97,7 +109,7 @@ function [Times,Errors,U_int,t,x] = practica1_1(choiceMethod, J_values, N_values
 
     nombre_metodo = method_names{choiceMethod};
 
-    if  length(N_values) > 1 
+    if  length(N_values) > 1 || length(J_values) > 1
         % 1) k fijo, variando h
         figure(1);
         clf;      
@@ -118,7 +130,6 @@ function [Times,Errors,U_int,t,x] = practica1_1(choiceMethod, J_values, N_values
 
         legend(legend_text_k, 'Location', 'best');
 
-        % Corregido: removido "\n"
         print("-f1", "k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
 
         % 2) h fijo, variando k
@@ -141,28 +152,8 @@ function [Times,Errors,U_int,t,x] = practica1_1(choiceMethod, J_values, N_values
 
         legend(legend_text_h, 'Location', 'best');
 
-        % Corregido: removido "\n"
         print("-f2", "h_fijo_var_k_COMBINADO_" + nombre_metodo, "-dpng");
 
-        % 3) Eficiencia
-        figure(3);
-        clf;      
-        hold on; 
-
-        for n = 1:L_n
-            loglog(Times(n,:), Errors(n,:), 'o', 'MarkerSize', 8, 'LineWidth', 2);
-        end
-
-        hold off; 
-        grid on;
-        xlabel('Tiempo de cómputo (s)');
-        ylabel('Error máximo');
-        title(sprintf('Eficiencia: %s', nombre_metodo));
-
-        legend(legend_text_k, 'Location', 'best');
-
-        % Corregido: removido "\n"
-        print("-f3", "eficiencia_" + nombre_metodo, "-dpng")
     end
 end
 
@@ -198,18 +189,18 @@ function [U_int, errors] = solve_explicito(params, u, u_exact, choiceError)
     x = params.x;
     t = params.t;
 
-    errors = zeros(1, N+1);
-
-    % Inicialización de la matriz de solución U (interior points)
-    U_int = zeros(J-1, N+1);
-    U_int(:, 1) = u; % Almacenar la condición inicial
-
     A = spdiags([mu , (1-2*mu), mu], -1:1, J-1, J-1);
 
+    % Inicialización de la matriz de solución U (puntos interiores)
+    U_int = zeros(J-1, N+1);
+    U_int(:, 1) = u; 
+
+    % Inicialización del error en función de la opción tomada
+    errors = zeros(1, N+1);
     u_ex = u_exact(x, t(1));
     if choiceError == 1 
         errors(1) = max(abs(u - u_ex)) / (max(u_ex) + eps) ;
-    elseif chioceError == 2 
+    elseif choiceError == 2 
         errors(1) = max(abs(u - u_ex)); 
     end
 
@@ -235,19 +226,23 @@ function [U_int, errors] = solve_implicito(params, u, u_exact, choiceError)
     A = spdiags([-mu , (1+2*mu), -mu ], -1:1, J-1, J-1);
     dA = decomposition(A);
 
-    errors = zeros(1, N+1);
-
-    % Inicialización de la matriz de solución U (interior points)
+    % Inicialización de la matriz de solución U (puntos interiores)
     U_int = zeros(J-1, N+1);
-    U_int(:, 1) = u; % Almacenar la condición inicial
+    U_int(:, 1) = u; 
 
+    % Inicialización del error en función de la opción tomada
+    errors = zeros(1, N+1);
     u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex)) / max(u_ex);
+    if choiceError == 1 
+        errors(1) = max(abs(u - u_ex)) / (max(u_ex) + eps) ;
+    elseif choiceError == 2 
+        errors(1) = max(abs(u - u_ex)); 
+    end
 
 
     for n = 1:N
         u = dA \ u;
-        U_int(:, n+1) = u; % Almacenar el paso de tiempo
+        U_int(:, n+1) = u; 
         u_ex = u_exact(x, t(n+1));
         if choiceError == 1
             errors(n+1) = max(abs(u - u_ex)) / (max(u_ex) + eps);
@@ -269,18 +264,22 @@ function [U_int, errors] = solve_crank(params, u, u_exact, choiceError)
     B = spdiags([temp,  (1-mu),  temp ], -1:1, J-1, J-1);
     dA = decomposition(A);
 
-    errors = zeros(1, N+1);
-
-    % Inicialización de la matriz de solución U (interior points)
+    % Inicialización de la matriz de solución U (puntos interiores)
     U_int = zeros(J-1, N+1);
-    U_int(:, 1) = u; % Almacenar la condición inicial
+    U_int(:, 1) = u; 
 
+    % Inicialización del error en función de la opción tomada
+    errors = zeros(1, N+1);
     u_ex = u_exact(x, t(1));
-    errors(1) = max(abs(u - u_ex)) / max(u_ex);
+    if choiceError == 1 
+        errors(1) = max(abs(u - u_ex)) / (max(u_ex) + eps) ;
+    elseif choiceError == 2 
+        errors(1) = max(abs(u - u_ex)); 
+    end
 
     for n = 1:N
         u = dA \ (B * u);
-        U_int(:, n+1) = u; % Almacenar el paso de tiempo
+        U_int(:, n+1) = u; 
         u_ex = u_exact(x, t(n+1));
         if choiceError == 1
             errors(n+1) = max(abs(u - u_ex)) / (max(u_ex) + eps);
