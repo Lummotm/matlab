@@ -49,7 +49,7 @@ for tipo_error = 1:2
     ylabel(sprintf('Error máximo (%s)', nombre_error));
     title(sprintf('Comparación de Eficiencia (Error %s)', nombre_error));
     legend('Location', 'best');
-    grid on;
+    grid off; % esto hace que se vea mejor
     
     % Crea un nombre de archivo dinámico
     filename = sprintf('comparacion_eficiencia_GENERAL_%s.png', upper(nombre_error));
