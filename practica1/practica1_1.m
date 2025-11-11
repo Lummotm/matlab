@@ -11,7 +11,7 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
     %       - 1) Relativo (ya que la funcion de por si tiende a 0)
     %       - 2) Absoluto (en el caso de el imlicito le suele beneficiar un poco)
     % - J_values: valores de J, peudes pasar un vector y el programa se encarga de ello usar cada uno para cada malla de h
-    % - N_values: valores de N, puedes pasar un escalar o un vector, si no se pasa nada, se considera el caso de mu = 1/2 para poder ejecutar el metodo explicito
+    % - N_values: valores de N, puedes pasar un escalar o un vector, si no se pasa nada, se considera el caso de mu = 0.4 < 1/2 para poder ejecutar el metodo explicito
 
     T = 0.5; % Tiempo final de la simulación
 
@@ -109,6 +109,7 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
 
     nombre_metodo = method_names{choiceMethod};
 
+    % Solo tiene caso iterar sobre casos de al menos 2 elementos para graficar, porque sino tendriamos elementos unipuntuales en las graficas que no aportan nada
     if  length(N_values) > 1 || length(J_values) > 1
         % 1) k fijo, variando h
         figure(1);
@@ -130,7 +131,7 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
 
         legend(legend_text_k, 'Location', 'best');
 
-        print("-f1", "k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
+        print("-f1", "P1_k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
 
         % 2) h fijo, variando k
         figure(2);
@@ -152,7 +153,7 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
 
         legend(legend_text_h, 'Location', 'best');
 
-        print("-f2", "h_fijo_var_k_COMBINADO_" + nombre_metodo, "-dpng");
+        print("-f2", "P1_h_fijo_var_k_COMBINADO_" + nombre_metodo, "-dpng");
 
     end
 end
