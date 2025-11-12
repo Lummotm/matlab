@@ -1,26 +1,24 @@
 function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J_values, N_values)
     % El texto siguiente esta diseñado para que sea leido al usar help el esta función  
-    % Function practica1_2 
-    % Resuelve para (u_t = u_xx + f(x,t))
+    % Function practica1_1. 
+    % Resuelve la ecuación del calor 1D (u_t = u_xx)
+    % Input: (choiceMethod, choiceError, J_values, N_values)
+    % - choiceMethod: metodo escogido 
+    %       - 1) Explícito
+    %       - 2) Implícito
+    %       - 3) Crank-Nicolson
+    % - choiceError: forma de calcular el error
+    %       - 1) Relativo (ya que la funcion de por si tiende a 0)
+    %       - 2) Absoluto (en el caso de el imlicito le suele beneficiar un poco)
+    % - J_values: valores de J, peudes pasar un vector y el programa se encarga de ello usar cada uno para cada malla de h
+    % - N_values: valores de N, puedes pasar un escalar o un vector, si no se pasa nada, se considera el caso de mu = 0.4 < 1/2 para poder ejecutar el metodo explicito
 
-    T = 0.5; % Tiempo final de la simulación, no se si hay que usar este la verdada
+    T = 0.5; % Tiempo final de la simulación
 
     % Condiciones iniciales y solución exacta 
+    u0_fun = @(x) sin(2*pi*x);
+    u_exact = @(x,t) sin(2*pi*x) .* exp(-4*pi^2 * t);
 
-    u_exact = @(x,t) t .* cos(pi*x/2) .^ 2 ./ (t+1);
-    f_fun = @(x,t) (cos(pi*x/2) ./ (t+2)) .^ 2 + (pi^2*t .* cos(pi*x)) ./ 2*(t+1)
-    
-    % Condición borde (0,t)
-    b_fun = @(t) t ./ (t+1)
-
-    % Tener en cuenta que la solución no tiene condiciones dirichlet homogeneas ahora
-    % u(0,t)=t/(t+1), T > t > 0 , u(x,0)=u(x,1)=0, 1 >= x >= 0
-
-    % El valor de v(t_n+1,x_j) = v(t_n,x_j) + mu*(v(t_n,x_j+1)-2*v(t_n,x_j)+v(t_n,x_j-1))+f(t_n+1,x_j) 
-
-    % Falta buscar u0
-
-    % Revisar si hace falta realmente la logica de nargin (creo que en matlab lo puedes ignorar y asignar directamente)
     if nargin < 1 || isempty(choiceMethod)
         choiceMethod = 0; % Valor por defecto si no se introduce
     end
@@ -133,7 +131,7 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
 
         legend(legend_text_k, 'Location', 'best');
 
-        print("-f1", "P1_k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
+        print("-f1", "P1_k_fijo_var_h_" + nombre_metodo, "-dpng");
 
         % 2) h fijo, variando k
         figure(2);
@@ -155,7 +153,7 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
 
         legend(legend_text_h, 'Location', 'best');
 
-        print("-f2", "P1_h_fijo_var_k_COMBINADO_" + nombre_metodo, "-dpng");
+        print("-f2", "P1_h_fijo_var_k_" + nombre_metodo, "-dpng");
 
     end
 end
@@ -291,4 +289,3 @@ function [U_int, errors] = solve_crank(params, u, u_exact, choiceError)
         end
     end
 end
-

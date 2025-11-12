@@ -1,23 +1,20 @@
-function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J_values, N_values)
-    % El texto siguiente esta diseñado para que sea leido al usar help el esta función  
-    % Function practica1_1. 
-    % Resuelve la ecuación del calor 1D (u_t = u_xx)
-    % Input: (choiceMethod, choiceError, J_values, N_values)
-    % - choiceMethod: metodo escogido 
-    %       - 1) Explícito
-    %       - 2) Implícito
-    %       - 3) Crank-Nicolson
-    % - choiceError: forma de calcular el error
-    %       - 1) Relativo (ya que la funcion de por si tiende a 0)
-    %       - 2) Absoluto (en el caso de el imlicito le suele beneficiar un poco)
-    % - J_values: valores de J, peudes pasar un vector y el programa se encarga de ello usar cada uno para cada malla de h
-    % - N_values: valores de N, puedes pasar un escalar o un vector, si no se pasa nada, se considera el caso de mu = 0.4 < 1/2 para poder ejecutar el metodo explicito
+function [Times, Errors, U_int, t, x] = practica1_2(choiceMethod, choiceError, J_values, N_values)
+    % Function practica1_2 
+    % Resuelve para (u_t = u_xx + f(x,t))
 
     T = 0.5; % Tiempo final de la simulación
 
     % Condiciones iniciales y solución exacta 
-    u0_fun = @(x) sin(2*pi*x);
-    u_exact = @(x,t) sin(2*pi*x) .* exp(-4*pi^2 * t);
+    u_exact = @(x,t) t .* cos(pi*x/2) .^ 2 ./ (t+1);
+
+    % u0 sera la dada por el exacto en el borde t=0
+    u0_fun = @(x) u_exact(x,0);
+    f_fun = @(x,t) (cos(pi*x/2) ./ (t+1)) .^ 2 + (pi^2*t .* cos(pi*x)) ./ (2*(t+1));
+    
+    % Condición borde (0,t)
+    b_fun = @(t) t ./ (t+1);
+
+    % u(0,t)=t/(t+1), T > t > 0 , u(x,0)=u(x,1)=0, 1 >= x >= 0
 
     if nargin < 1 || isempty(choiceMethod)
         choiceMethod = 0; % Valor por defecto si no se introduce
@@ -36,7 +33,6 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
     if nargin < 4 || isempty(N_values)
         % Si no se da, se calcula N para CUMPLIR LA CONDICIÓN DE ESTABILIDAD
         % del método explícito (mu <= 1/2).
-        % mu = k/h^2 = (1 / (2.5 * J^2)) / (1/J^2) = 1/2.5 = 0.4
         disp("INFO: 'N_values' no especificado. Calculando N por estabilidad (mu=0.4).")
         N_values = 2.5 * J_values.^2 * T;
     end
@@ -54,10 +50,7 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
         disp("---------------------------------")
     end
 
-    % Se usa para los nombres de las graficas que se guardaran posteriormente
     method_names = {'Explícito', 'Implícito', 'Crank-Nicolson'};
-
-
 
     % Inicialización
     L_j = length(J_values);
@@ -94,7 +87,7 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
             params.t = t; 
 
             % Resolver
-            [time, errors, U_int_current] = solver_selection(choiceMethod, params, u0, u_exact, choiceError);
+            [time, errors, U_int_current] = solver_selection(choiceMethod, params, u0, u_exact, f_fun, b_fun, choiceError);
 
             errmax = max(errors);
             Times(n, j) = time;
@@ -109,7 +102,6 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
 
     nombre_metodo = method_names{choiceMethod};
 
-    % Solo tiene caso iterar sobre casos de al menos 2 elementos para graficar, porque sino tendriamos elementos unipuntuales en las graficas que no aportan nada
     if  length(N_values) > 1 || length(J_values) > 1
         % 1) k fijo, variando h
         figure(1);
@@ -128,10 +120,8 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
         xlabel('Tiempo de ejecución');
         ylabel('Error máximo');
         title(sprintf('(k fijo, var h): %s', nombre_metodo));
-
         legend(legend_text_k, 'Location', 'best');
-
-        print("-f1", "P1_k_fijo_var_h_COMBINADO_" + nombre_metodo, "-dpng");
+        print("-f1", "P2_k_fijo_var_h_" + nombre_metodo, "-dpng");
 
         % 2) h fijo, variando k
         figure(2);
@@ -150,55 +140,57 @@ function [Times, Errors, U_int, t, x] = practica1_1(choiceMethod, choiceError, J
         xlabel('Tiempo de ejecución');
         ylabel('Error máximo');
         title(sprintf('(h fijo, var k): %s', nombre_metodo));
-
         legend(legend_text_h, 'Location', 'best');
-
-        print("-f2", "P1_h_fijo_var_k_COMBINADO_" + nombre_metodo, "-dpng");
-
+        print("-f2", "P2_h_fijo_var_k_" + nombre_metodo, "-dpng");
     end
 end
 
 
-
-function [time, errors, U_int] = solver_selection(choiceMethod, params, u0, u_exact, choiceError)
+function [time, errors, U_int] = solver_selection(choiceMethod, params, u0, u_exact, f_fun, b_fun, choiceError)
+    J = params.J;
+    N = params.N;
+    
     switch choiceMethod
     case 1
         if params.mu <= 1/2 
             tic;
-            [U_int, errors] = solve_explicito(params, u0, u_exact, choiceError);
+            [U_int, errors] = solve_explicito(params, u0, u_exact, f_fun, b_fun, choiceError); 
             time = toc;
         else 
-            errors(:) = NaN;
+            errors = NaN(1, N + 1);
             time = NaN;
-            U_int = NaN;
+            U_int = NaN(J - 1, N + 1);
         end
     case 2
         tic;
-        [U_int, errors] = solve_implicito(params, u0, u_exact, choiceError);
+        [U_int, errors] = solve_implicito(params, u0, u_exact, f_fun, b_fun, choiceError);
         time = toc;
     case 3
         tic;
-        [U_int, errors] = solve_crank(params, u0, u_exact, choiceError);
+        [U_int, errors] = solve_crank(params, u0, u_exact, f_fun, b_fun, choiceError);
         time = toc;
     end
 end
 
-function [U_int, errors] = solve_explicito(params, u, u_exact, choiceError)
+function [U_int, errors] = solve_explicito(params, u, u_exact, f_fun, b_fun, choiceError)
     J = params.J;
     N = params.N;
     mu = params.mu;
     x = params.x;
     t = params.t;
+    k = t(2) - t(1); 
 
     A = spdiags([mu , (1-2*mu), mu], -1:1, J-1, J-1);
 
-    % Inicialización de la matriz de solución U (puntos interiores)
     U_int = zeros(J-1, N+1);
     U_int(:, 1) = u; 
 
-    % Inicialización del error en función de la opción tomada
     errors = zeros(1, N+1);
     u_ex = u_exact(x, t(1));
+
+    % Inicializo el borde
+    b = zeros(J-1 ,1);
+
     if choiceError == 1 
         errors(1) = max(abs(u - u_ex)) / (max(u_ex) + eps) ;
     elseif choiceError == 2 
@@ -206,43 +198,11 @@ function [U_int, errors] = solve_explicito(params, u, u_exact, choiceError)
     end
 
     for n = 1:N
-        u = A * u;
-        U_int(:, n+1) = u; % Almacenar el paso de tiempo
-        u_ex = u_exact(x, t(n+1));
-        if choiceError == 1
-            errors(n+1) = max(abs(u - u_ex)) / (max(u_ex) + eps);
-        elseif  choiceError == 2
-            errors(n+1) = max(abs(u-u_ex));
-        end
-    end
-end
+        f = f_fun(x,t(n));  
+        b(1) = mu * b_fun(t(n));
 
-function [U_int, errors] = solve_implicito(params, u, u_exact, choiceError)
-    J = params.J;
-    N = params.N;
-    mu = params.mu;
-    x = params.x;
-    t = params.t;
+        u = A * u + k * f + b;
 
-    A = spdiags([-mu , (1+2*mu), -mu ], -1:1, J-1, J-1);
-    dA = decomposition(A);
-
-    % Inicialización de la matriz de solución U (puntos interiores)
-    U_int = zeros(J-1, N+1);
-    U_int(:, 1) = u; 
-
-    % Inicialización del error en función de la opción tomada
-    errors = zeros(1, N+1);
-    u_ex = u_exact(x, t(1));
-    if choiceError == 1 
-        errors(1) = max(abs(u - u_ex)) / (max(u_ex) + eps) ;
-    elseif choiceError == 2 
-        errors(1) = max(abs(u - u_ex)); 
-    end
-
-
-    for n = 1:N
-        u = dA \ u;
         U_int(:, n+1) = u; 
         u_ex = u_exact(x, t(n+1));
         if choiceError == 1
@@ -253,25 +213,26 @@ function [U_int, errors] = solve_implicito(params, u, u_exact, choiceError)
     end
 end
 
-function [U_int, errors] = solve_crank(params, u, u_exact, choiceError)
+function [U_int, errors] = solve_implicito(params, u, u_exact, f_fun, b_fun, choiceError)
     J = params.J;
     N = params.N;
     mu = params.mu;
     x = params.x;
     t = params.t;
+    
+    k = t(2) - t(1);
 
-    temp = mu / 2;
-    A = spdiags([-temp, (1+mu) , -temp ], -1:1, J-1, J-1);
-    B = spdiags([temp,  (1-mu),  temp ], -1:1, J-1, J-1);
+    A = spdiags([-mu , (1+2*mu), -mu ], -1:1, J-1, J-1);
     dA = decomposition(A);
 
-    % Inicialización de la matriz de solución U (puntos interiores)
     U_int = zeros(J-1, N+1);
     U_int(:, 1) = u; 
 
-    % Inicialización del error en función de la opción tomada
     errors = zeros(1, N+1);
     u_ex = u_exact(x, t(1));
+
+    b = zeros(J-1, 1);
+
     if choiceError == 1 
         errors(1) = max(abs(u - u_ex)) / (max(u_ex) + eps) ;
     elseif choiceError == 2 
@@ -279,7 +240,62 @@ function [U_int, errors] = solve_crank(params, u, u_exact, choiceError)
     end
 
     for n = 1:N
-        u = dA \ (B * u);
+        f = f_fun(x, t(n+1));
+        b(1) = mu * b_fun(t(n+1));
+        LD = u + k * f + b; % Lado derecho
+
+        u = dA \ LD;
+
+        U_int(:, n+1) = u; 
+        u_ex = u_exact(x, t(n+1));
+        if choiceError == 1
+            errors(n+1) = max(abs(u - u_ex)) / (max(u_ex) + eps);
+        elseif  choiceError == 2
+            errors(n+1) = max(abs(u-u_ex));
+        end
+    end
+end
+
+function [U_int, errors] = solve_crank(params, u, u_exact, f_fun, b_fun, choiceError)
+    J = params.J;
+    N = params.N;
+    mu = params.mu;
+    x = params.x;
+    t = params.t;
+    k = t(2) - t(1);
+
+    temp = mu / 2;
+    A = spdiags([-temp, (1+mu) , -temp ], -1:1, J-1, J-1);
+    B = spdiags([temp,  (1-mu),  temp ], -1:1, J-1, J-1);
+    dA = decomposition(A);
+
+    U_int = zeros(J-1, N+1);
+    U_int(:, 1) = u; 
+
+    errors = zeros(1, N+1);
+    u_ex = u_exact(x, t(1));
+    
+    f_prev = f_fun(x, t(1)); % f en t_0
+    b_prev = zeros(J-1, 1);
+    b_curr = zeros(J-1, 1);
+    b_prev(1) = temp * b_fun(t(1)); % borde en t_0
+
+    if choiceError == 1 
+        errors(1) = max(abs(u - u_ex)) / (max(u_ex) + eps) ;
+    elseif choiceError == 2 
+        errors(1) = max(abs(u - u_ex)); 
+    end
+    
+    for n = 1:N
+        f_curr = f_fun(x, t(n+1));
+        b_curr(1) = temp * b_fun(t(n+1)); 
+
+        LD = (B*u) + (k/2) * (f_prev + f_curr) + b_prev + b_curr; % lado derecho
+        u = dA \ LD;
+
+        b_prev(1) = b_curr(1); 
+        f_prev = f_curr;
+
         U_int(:, n+1) = u; 
         u_ex = u_exact(x, t(n+1));
         if choiceError == 1
