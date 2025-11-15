@@ -82,7 +82,7 @@ Error_fit = exp(p(2)) * h_fit.^p(1);
 loglog(h_fit, Error_fit, 'r--', 'LineWidth', 1.5);
 
 % Leyenda
-title(sprintf('P1 Convergencia Espacial (p) - %s', method_names{i}));
+title(sprintf('P1 Convergencia Espacial Sin Ajuste (p) - %s', method_names{i}));
 xlabel('log(h)');
 ylabel('log(Error)');
 legend('Datos', sprintf('Ajuste (p = %.4f)', orden_p), 'Location', 'best');
