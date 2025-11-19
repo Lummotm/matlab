@@ -1,0 +1,346 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{subcaption} % para poder poner una figura al lado de otra
+\usepackage[margin=2.5cm]{geometry} % margenes a 2.5cm
+\usepackage[spanish, provide=*]{babel}
+\usepackage{graphicx}
+\usepackage{xfrac} % más fracciones yipee
+\usepackage{hyperref} % referencias
+
+\title{Práctica 1}
+\author{David Nikolov Yordanov}
+\date{17 de Noviembre de 2025}
+
+\begin{document}
+
+\maketitle
+
+\vspace{5cm}
+
+\tableofcontents
+
+\clearpage
+
+\section{Introducción}
+
+En este informe se implementan los métodos explícito, implícito y de Crank-Nicolson para resolver la ecuación del calor en condiciones típicas y en condiciones no homogéneas. \\
+\noindent Usaremos la notación habitual:
+
+\begin{itemize}
+	\item \(J \) será el número de nodos en la partición de espacio y \(h = \sfrac{1}{J}\) distancia entre los nodos.
+	\item \(N\) será el número de nodos en la partición de tiempo y \(k = \sfrac{T}{N}\) distancia entre los nodos.
+	\item \(T\) punto final en tiempo.
+\end{itemize}
+
+\section{Parte 1: Ecuación Homogénea}
+
+Estamos estudiando la ecuación del calor de homogénea:
+\[
+	\frac{\partial^2 u}{\partial x^2} = \frac{\partial u}{\partial t}
+	\quad \text{con condiciones Dirichlet} \quad
+\]
+
+\noindent Consideramos de condición inicial una autofunción del problema \(u_0(x) = \sin(2 \pi x)\) que nos lleva a que el problema tenga solución exacta \(u(x,t) = e^{-4\pi^2 t} \sin(2 \pi x)\) \\
+
+\noindent Buscamos aproximaciones de la forma \(\{U_{j}^n\}_{j=1,n=1}^{J-1,N}\) donde J, N son el número de nodos de espacio y tiempo respectivamente. Tenemos varios métodos para calcular estas:
+
+\begin{align}
+	 & \text{Explícito:}     & \frac{U_{j}^{n+1} - U_j^{n}}{k} & = \frac{1}{h^2}(U_{j+1}^n - 2U_{j}^n + U_{j-1}^n)                                                                   \\
+	 & \text{Implícito:}     & \frac{U_{j}^{n+1} - U_j^{n}}{k} & = \frac{1}{h^2}(U_{j+1}^{n+1} - 2U_{j}^{n+1} + U_{j-1}^{n+1})                                                       \\
+	 & \text{Crank-Nicolson} & \frac{U_{j}^{n+1} - U_j^{n}}{k} & = \frac{1}{2h^2} \left[ (U_{j+1}^n - 2U_{j}^n + U_{j-1}^n) + (U_{j+1}^{n+1} - 2U_{j}^{n+1} + U_{j-1}^{n+1}) \right]
+\end{align}
+
+\noindent Sabemos por la teoría que el error de la aproximación es aproximadamente: \(O(k+h^2)\) para los métodos explícito e implícito, y \(O(k^2+h^2)\) para el método Crank-Nicolson. (El método explícito solo converge para \(\mu \leq 0.5\))
+
+\noindent Queremos ver mediante esta práctica que estas cotas se cumplen y comparar la eficiencia de los métodos.
+
+
+\clearpage
+\subsection{Análisis de Convergencia}
+Para verificar los ordenes de convergencia teóricos se realizan dos tipos de tests.
+
+\subsubsection{Convergencia Espacial (p)}
+\noindent Para medir la convergencia espacial \(p\), se fija la relación \(\mu = \sfrac{k}{h^2} = 0.4\). Como se aprecia en la Figura~\ref{fig:conv_h_cn}, verificando el orden espacial de Crank-Nicolson. En los casos de implícito y explícito en estas condiciones se tiene que como \(k = 0.4\cdot h^2\) entonces \(E \approx O(0.4 \cdot h^2 + h^2) = O (h^2)\). Teniéndose un orden de convergencia espacial cuadrático aun siendo ambos de orden lineal en tiempo (véase la Figura~\ref{fig:conv_h_anexo}).
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.60\textwidth]{assets/P1_convergencia_h_Metodo_3.png}
+	\caption{P1 Convergencia espacial (p) para Crank-Nicolson. Pendiente \(p \approx 2.0\).}\label{fig:conv_h_cn}
+\end{figure}
+
+
+\noindent La Figura~\ref{fig:conv_h_no_ajustado} demuestra por qué el ajuste \(\mu=cte\) es necesario. Si no se ajusta (usando \(k \propto h\)), el error temporal \(O(k)\) del método implícito pasa a ser dominante sobre el error espacial \(O(h^2)\), y la pendiente global se aproxima a \(p \approx 1.43 \).
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.60\textwidth]{assets/P1_convergencia_h_Metodo_2_no_ajustado.png}
+	\caption{P1 Convergencia espacial (p) para Implícito sin ajuste \(\mu\). Pendiente \(p \approx 1.43\).}\label{fig:conv_h_no_ajustado}
+\end{figure}
+
+
+\clearpage
+
+\subsubsection{Convergencia Temporal (q)}
+
+\noindent Para medir el orden temporal \(q\), se aísla el error temporal usando una malla espacial muy fina (\(J=2000\)) para que el error \(O(h^2)\) sea despreciable. \\
+
+\noindent \textbf{Nota sobre el método explícito:} Este test se omite para el método explícito. Su condición de estabilidad (\(\mu \le 1/2\))
+fuerza a que \(k \propto h^2\). Esto ata el error temporal al espacial, impidiéndonos aislar el error temporal del espacial.
+
+
+\noindent Las Figuras~\ref{fig:conv_k_cn} y \ref{fig:conv_k_imp} muestran los resultados de este test.
+\begin{itemize}
+	\item \textbf{Crank-Nicolson (Fig.~\ref{fig:conv_k_cn}):} Confirma claramente el resultado teórico esperado \(E \approx O(k^2)\), con una pendiente \(q \approx 2.0\).
+	\item \textbf{Implícito (Fig.~\ref{fig:conv_k_imp}):} Muestra una pendiente \(q \approx 1.35\) bastante cercana a \(1\), refinando más la malla este valor tiende a \(1\) demostrando nuestro resultado teórico \(E \approx O(k)\).
+\end{itemize}
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.60\textwidth]{assets/P1_convergencia_k_Metodo_3.png}
+	\caption{P1 Convergencia temporal (q) para Crank-Nicolson. Pendiente \(q \approx 2.0\).}\label{fig:conv_k_cn}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.60\textwidth]{assets/P1_convergencia_k_Metodo_2.png}
+	\caption{P1 Convergencia temporal (q) para Implícito. Pendiente \(q \approx 1.35\).}\label{fig:conv_k_imp}
+\end{figure}
+
+\clearpage
+
+\subsection{Análisis de Eficiencia}
+
+
+\noindent Finalmente, para comparar la eficiencia real de los tres métodos, se realiza una prueba híbrida. Para los métodos incondicionalmente estables (Implícito y Crank-Nicolson), se genera un conjunto de puntos probando una amplia cantidad de valores \(J \times N\). Para el método Explícito, se consideran valores estables \(\mu = 0.4\).
+
+\noindent La Figura~\ref{fig:eficiencia_final} muestra los resultados en una gráfica log-log de Error vs. Tiempo de Cómputo.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.7\textwidth]{assets/P1_comparacion_eficiencia_GENERAL_RELATIVO.png}
+	\caption{P1 Comparación de Eficiencia. Crank-Nicolson (verde), Implícito (azul) y Explícito (rojo).}\label{fig:eficiencia_final}
+\end{figure}
+
+\noindent De esta gráfica se extraen las conclusiones finales de la práctica:
+
+\begin{itemize}
+	\item \textbf{Crank-Nicolson (Verde):} El conjunto de puntos verdes forma la ``frontera eficiente''. Sus puntos están sistemáticamente más abajo (menor error) y más a la izquierda (menor tiempo) que los demás. Es, sin duda, el método más eficiente.
+
+	\item \textbf{Implícito (Azul):} Los puntos azules se sitúan por encima de los verdes. Demuestra ser una alternativa estable, pero para alcanzar un nivel de error similar al de Crank-Nicolson, requiere un tiempo de cómputo notablemente mayor. Esto se debe a su convergencia temporal de orden \(q=1\).
+
+
+	\item \textbf{Explícito (Rojo):} Los puntos rojos confirman que, aunque es preciso (error bajo), está muy desplazado a la derecha (tiempo de cómputo alto). Esto se debe a la condición de estabilidad (\(N \propto J^2\)), que obliga a un número excesivo de pasos de tiempo y dispara el coste, volviéndolo ineficiente. Se apreciará posteriormente con el caso del problema no homogéneo \hyperlink{conclusion_p2}{\textbf{[1]}}, la ineficacia del método.
+
+\end{itemize}
+
+\noindent \textbf{Conclusión:} El método de Crank-Nicolson (\(O(k^2+h^2)\)) es superior en todos los aspectos, ofreciendo la mayor precisión en el menor tiempo. El método Explícito (\(O(k+h^2)\)) es demasiado lento debido a su restricción de estabilidad, y el Implícito (\(O(k+h^2)\)), aunque estable, es menos eficiente que Crank-Nicolson por su convergencia temporal de primer orden. \\ \\
+
+\noindent \textbf{Nota:} Las gráficas de eficiencia solicitadas en el enunciado (para \(k\) fijo variando \(h\) y viceversa) se han incluido en el Anexo (véanse las Figuras~\ref{fig:anexo_k_fijo} y~\ref{fig:anexo_h_fijo}). Se aprecia en ellas lo siguiente: en las gráficas \textbf{h-fijo} (Fig.~\ref{fig:anexo_h_fijo}), el error de \textbf{Crank-Nicolson} es casi plano (dominado por el ``suelo'' espacial \(O(h^2)\)) mientras el \textbf{Implícito} muestra la caída de su error temporal \(O(k)\). En las gráficas \textbf{k-fijo} (Fig.~\ref{fig:anexo_k_fijo}), se ve el error espacial \(O(h^2)\) disminuir hasta chocar con el ``suelo'' temporal \(O(k^q)\). Finalmente, el \textbf{Explícito} (`h-fijo`) muestra el ``rebote'' del error de redondeo debido al número excesivo de pasos (\(N \propto J^2\)).
+
+\clearpage
+\section{Parte 2: Ecuación No Homogénea}
+
+\noindent Se considera ahora el problema no homogéneo:
+\[
+	u_t = u_{xx} + f(x,t)
+	\quad \text{con} \quad
+	0 < x < 1, \quad t > 0
+\]
+\noindent Con condiciones de borde y de inicio dadas por:
+\begin{align}
+	u(x,0) & = 0, \quad 0 \le x \le 1 \\
+	u(0,t) & = t / (t+1), \quad t > 0 \\
+	u(1,t) & = 0, \quad t > 0
+\end{align}
+\noindent Y un término fuente \(f(x,t)\) tal que la solución exacta es \(u(x,t) = \frac{t}{t+1}\cos(\pi x/2)^2\).
+
+\noindent Se repite el análisis de la Parte 1 para este problema. Como se observará, la adición de un término fuente y condiciones de borde no homogéneas no altera las propiedades de convergencia ni la eficiencia relativa de los métodos.
+
+\noindent \textbf{Nota:} Las gráficas de eficiencia (`k-fijo` y `h-fijo`) para esta parte también se incluyen en el Anexo (véanse las Figuras~\ref{fig:anexo_k_fijo_p2} y~\ref{fig:anexo_h_fijo_p2}).
+
+\clearpage
+\subsection{Análisis de Convergencia (Parte 2)}
+
+\subsubsection{Convergencia Espacial (p)}
+\noindent Se repite el test fijando \(\mu = 0.4\). Como se aprecia en la Figura~\ref{fig:conv_h_cn_p2}, Crank-Nicolson mantiene el orden \(p \approx 2.0\). Los métodos implícito y explícito (Figura~\ref{fig:conv_h_anexo_p2}) también lo hacen, ya que \(E \approx O(h^2)\).
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.60\textwidth]{assets/P2_convergencia_h_Metodo_3.png}
+	\caption{P2 Convergencia espacial (p) para Crank-Nicolson. Pendiente \(p \approx 2.0\).}\label{fig:conv_h_cn_p2}
+\end{figure}
+
+\noindent De nuevo, la Figura~\ref{fig:conv_h_no_ajustado_p2} demuestra que sin el ajuste \(\mu=cte\), el error temporal \(O(k)\) del método implícito domina, y la pendiente se aproxima a \(p \approx 0.91\).
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.60\textwidth]{assets/P2_convergencia_h_Metodo_2_no_ajustado.png}
+	\caption{P2 Convergencia espacial (p) para Implícito sin ajuste \(\mu\). Pendiente \(p \approx 0.91\).}\label{fig:conv_h_no_ajustado_p2}
+\end{figure}
+
+
+\clearpage
+\subsubsection{Convergencia Temporal (q)}
+
+\noindent Se repite el test con \(J=2000\) para aislar el error temporal.
+\noindent Las Figuras~\ref{fig:conv_k_cn_p2} y \ref{fig:conv_k_imp_p2} confirman los resultados teóricos: \(E \approx O(k^2)\) para el método Crank-Nicolson (con \(q \approx 1.95\)) y \(E \approx O(k)\) para el método Implícito (con \(q \approx 0.93\)).
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.60\textwidth]{assets/P2_convergencia_k_Metodo_3.png}
+	\caption{P2 Convergencia temporal (q) para Crank-Nicolson. Pendiente \(q \approx 1.95\).}\label{fig:conv_k_cn_p2}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.60\textwidth]{assets/P2_convergencia_k_Metodo_2.png}
+	\caption{P2 Convergencia temporal (q) para Implícito. Pendiente \(q \approx 0.93\).}\label{fig:conv_k_imp_p2}
+\end{figure}
+
+\clearpage
+\subsection{Análisis de Eficiencia (Parte 2)}
+
+\noindent Finalmente, se repite la prueba de eficiencia híbrida. La Figura~\ref{fig:eficiencia_final_p2} muestra unos resultados análogos a la Parte 1.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.7\textwidth]{assets/P2_comparacion_eficiencia_GENERAL_RELATIVO.png}
+	\caption{P2 Comparación de Eficiencia. Crank-Nicolson (verde), Implícito (azul) y Explícito (rojo).}\label{fig:eficiencia_final_p2}
+\end{figure}
+
+\noindent Las conclusiones son idénticas:
+\begin{itemize}
+	\item \textbf{Crank-Nicolson (Verde):} Sigue formando la ``frontera eficiente'', siendo el método más rápido para cualquier error deseado.
+	\item \textbf{Implícito (Azul):} Sus puntos se sitúan por encima de los verdes, confirmando que es estable pero menos eficiente.
+	\item \textbf{Explícito (Rojo):} Sus puntos son precisos (error bajo) pero lentos (tiempo de cómputo alto), confirmando que es inviable por su restricción de estabilidad.
+\end{itemize}
+
+\hypertarget{conclusion_p2}{}
+\noindent \textbf{Conclusión (Parte 2):} El método de Crank-Nicolson \( O(k^2+h^2)\) sigue siendo superior. La presencia de un término fuente y condiciones de borde no homogéneas no altera la eficiencia relativa ni el orden de convergencia.
+
+\noindent De hecho, este caso hace más visible la superioridad de Crank-Nicolson. Al no tender la solución a cero (como en el caso homogéneo), la prueba es más exigente. Esto resalta la ineficiencia del método explícito (cuyo coste computacional en el régimen estable es prohibitivo) y consolida a Crank-Nicolson como la opción más robusta y eficiente.
+
+
+\clearpage
+\section{Anexo - P1}
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{assets/P1_convergencia_h_Metodo_1.png}
+		\caption{P1 Convergencia espacial (p) - Explícito}\label{fig:conv_h_exp}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{assets/P1_convergencia_h_Metodo_2.png}
+		\caption{P1 Convergencia espacial (p) - Implícito}\label{fig:conv_h_imp}
+	\end{subfigure}
+
+	\caption{P1 Convergencia espacial para los métodos Explícito e Implícito con \(\mu=0.4\).}\label{fig:conv_h_anexo}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P1_k_fijo_var_h_Explícito.png}
+		\caption{k-fijo, Explícito}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P1_k_fijo_var_h_Implícito.png}
+		\caption{k-fijo, Implícito}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P1_k_fijo_var_h_Crank-Nicolson.png}
+		\caption{k-fijo, Crank-Nicolson}
+	\end{subfigure}
+
+	\caption{P1 Gráficas de eficiencia con k-fijo.}\label{fig:anexo_k_fijo}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P1_h_fijo_var_k_Explícito.png}
+		\caption{h-fijo, Explícito}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P1_h_fijo_var_k_Implícito.png}
+		\caption{h-fijo, Implícito}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P1_h_fijo_var_k_Crank-Nicolson.png}
+		\caption{h-fijo, Crank-Nicolson}
+	\end{subfigure}
+
+	\caption{P1 Gráficas de eficiencia con h-fijo.}\label{fig:anexo_h_fijo}
+\end{figure}
+
+\clearpage
+\clearpage
+\section{Anexo - P2}
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{assets/P2_convergencia_h_Metodo_1.png}
+		\caption{P2 Convergencia espacial (p) - Explícito}\label{fig:conv_h_exp_p2}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{assets/P2_convergencia_h_Metodo_2.png}
+		\caption{P2 Convergencia espacial (p) - Implícito}\label{fig:conv_h_imp_p2}
+	\end{subfigure}
+	\caption{P2 Convergencia espacial para Explícito e Implícito con \(\mu=0.4\).}\label{fig:conv_h_anexo_p2}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P2_k_fijo_var_h_Explícito.png}
+		\caption{k-fijo, Explícito (P2)}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P2_k_fijo_var_h_Implícito.png}
+		\caption{k-fijo, Implícito (P2)}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P2_k_fijo_var_h_Crank-Nicolson.png}
+		\caption{k-fijo, Crank-Nicolson (P2)}
+	\end{subfigure}
+
+	\caption{P2 Gráficas de eficiencia con k-fijo.}\label{fig:anexo_k_fijo_p2}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P2_h_fijo_var_k_Explícito.png}
+		\caption{h-fijo, Explícito (P2)}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P2_h_fijo_var_k_Implícito.png}
+		\caption{h-fijo, Implícito (P2)}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P2_h_fijo_var_k_Crank-Nicolson.png}
+		\caption{h-fijo, Crank-Nicolson (P2)}
+	\end{subfigure}
+
+	\caption{P2 Gráficas de eficiencia con h-fijo.}\label{fig:anexo_h_fijo_p2}
+\end{figure}
+
+\end{document}

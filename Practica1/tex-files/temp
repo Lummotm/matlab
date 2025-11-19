@@ -1,0 +1,40 @@
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P1_h_fijo_var_k_Explícito.png}
+		\caption{h-fijo, Explícito}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P1_h_fijo_var_k_Implícito.png}
+		\caption{h-fijo, Implícito}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P1_h_fijo_var_k_Crank-Nicolson.png}
+		\caption{h-fijo, Crank-Nicolson}
+	\end{subfigure}
+
+	\caption{P1 Gráficas de eficiencia con h-fijo.}\label{fig:anexo_h_fijo}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P2_k_fijo_var_h_Explícito.png}
+		\caption{k-fijo, Explícito (P2)}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P2_k_fijo_var_h_Implícito.png}
+		\caption{k-fijo, Implícito (P2)}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\includegraphics[width=\textwidth]{assets/P2_k_fijo_var_h_Crank-Nicolson.png}
+		\caption{k-fijo, Crank-Nicolson (P2)}
+	\end{subfigure}
+
+	\caption{Gráficas de eficiencia con k-fijo para P2.}\label{fig:anexo_k_fijo_p2}
+\end{figure}
