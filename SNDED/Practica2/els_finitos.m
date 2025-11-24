@@ -1,4 +1,4 @@
-function [u_interior, time, error] = els_finitos(VhMethod,integrationMethod,N)
+function [u_interior, nodos, time, error] = els_finitos(VhMethod,integrationMethod,N)
 a = 0; b = 1;
 f = @(x) (1+pi^2)*sin(pi*x);
 u_exact = @(x) sin(pi*x);
