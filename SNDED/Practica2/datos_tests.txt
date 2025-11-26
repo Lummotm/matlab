@@ -1,61 +1,53 @@
->> test_convergencia(100)
-Con valores I = 100 , J = 200
-error_1 =
+>> test_convergencia % Caso polinomio
+Con valores I = 10 , J = 110 , TypeError = 1
+    1.9982
+    1.9255
 
-   1.0e-05 *
+Con valores I = 10 , J = 110 , TypeError = 2
+    1.9993
+    2.4468
 
-    0.7566    0.6253    0.5254    0.4477    0.3860    0.3363    0.2956    0.2618    0.2335    0.2096    0.1892
+Con valores I = 10 , J = 110 , TypeError = 3
+    1.9982
+    1.9255
 
-
-error_2 =
-
-   1.0e-09 *
-
-    0.3824    0.2604    0.1840    0.1350    0.0995    0.0745    0.0604    0.0465    0.0371    0.0313    0.0218
-
->> clc
->> test_convergencia(100)
-Con valores I = 100 , J = 200
-error_1 =
-
-   1.0e-05 *
-
-    0.7566    0.6253    0.5254    0.4477    0.3860    0.3363    0.2956    0.2618    0.2335    0.2096    0.1892
+Con valores I = 10 , J = 110 , TypeError = 4
+    1.9990
+    4.0091
 
 
-error_2 =
+>> test_convergencia % Caso coseno
+Con valores I = 10 , J = 110 , TypeError = 1
+    1.9982
+    1.9255
 
-   1.0e-09 *
+Con valores I = 10 , J = 110 , TypeError = 2
+    1.9993
+    2.4468
 
-    0.3824    0.2604    0.1840    0.1350    0.0995    0.0745    0.0604    0.0465    0.0371    0.0313    0.0218
+Con valores I = 10 , J = 110 , TypeError = 3
+    1.9982
+    1.9255
 
->> test_convergencia(200)
-Con valores I = 200 , J = 300
-error_1 =
-
-   1.0e-05 *
-
-    0.1892    0.1716    0.1563    0.1430    0.1314    0.1211    0.1119    0.1038    0.0965    0.0900    0.0841
-
-
-error_2 =
-
-   1.0e-10 *
-
-    0.2179    0.1926    0.1598    0.0990    0.0997    0.0829    0.0851    0.0604    0.0863    0.0945    0.0594
-
->> test_convergencia(300)
-Con valores I = 300 , J = 400
-error_1 =
-
-   1.0e-06 *
-
-    0.8407    0.7874    0.7389    0.6948    0.6546    0.6177    0.5838    0.5527    0.5240    0.4975    0.4729
+Con valores I = 10 , J = 110 , TypeError = 4
+    1.9990
+    4.0091
 
 
-error_2 =
+>> test_convergencia % Caso seno
+Con valores I = 10 , J = 110 , TypeError = 1
+    1.9982
+    1.9255
 
-   1.0e-10 *
+Con valores I = 10 , J = 110 , TypeError = 2
+    1.9993
+    2.4468
 
-    0.0594    0.0435    0.0688    0.0800    0.0393    0.1036    0.0290    0.0296    0.0303    0.0931    0.1436
+Con valores I = 10 , J = 110 , TypeError = 3
+    1.9982
+    1.9255
+
+Con valores I = 10 , J = 110 , TypeError = 4
+    1.9990
+    4.0091
 

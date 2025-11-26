@@ -1,21 +1,29 @@
 function [u_interior, nodos, time, error] = els_finitos(VhMethod,integrationMethod,N)
 a = 0; b = 1;
-f = @(x) (1+pi^2)*sin(pi*x);
-u_exact = @(x) sin(pi*x);
+
+% f = @(x) (1+pi^2)*sin(pi*x);
+% u_exact = @(x) sin(pi*x);
+
+% f = @(x) (1+pi^2)*cos(pi*x)-1;
+% u_exact = @(x) cos(pi*x)-1;
+
+u_exact = @(x) (x.^4 - x);
+f = @(x) (x.^4 - 12*x.^2 - x);
+
 switch VhMethod
     case 1
         tic
         [u_interior, nodos] = pol_lineales(N,a,b,f,integrationMethod);
         time = toc;
         % Calculo el error fuera para no contaminar tiempo de ejecución
-
         error = max(abs(u_exact(nodos) - u_interior));
     case 2
         tic
         [u_interior, nodos] = pol_cuadraticos(N,a,b,f,integrationMethod);
         time = toc;
         % Calculo el error fuera para no contaminar el tiempo de ejecución
-        error = max(abs(u_exact(nodos) - u_interior));
+        % error = max(abs(u_exact(nodos) - u_interior)) ;
+        error = sqrt(mean((u_exact(nodos) - u_interior).^2 ));
 end
 end
 
