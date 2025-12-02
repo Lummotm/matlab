@@ -8,12 +8,12 @@ time_2 = zeros(1,length(N));
 error_1 = zeros(1,length(N));
 error_2 = zeros(1,length(N));
 
-for j = 1:4
+for j = 1:3
 
     typeError = j;
     for i = 1:length(N)
-        [~,~,time_1(i),error_1(i)] = els_finitos(1,typeError,N(i));
-        [~,~,time_2(i),error_2(i)] = els_finitos(2,typeError,N(i));
+        [~,time_1(i),error_1(i)] = els_finitos(1,typeError,N(i));
+        [~,time_2(i),error_2(i)] = els_finitos(2,typeError,N(i));
     end
 
 

@@ -1,29 +1,30 @@
-function [u_interior, nodos, time, error] = els_finitos(VhMethod,integrationMethod,N)
+function [u, time, error] = els_finitos(VhMethod,integrationMethod,N)
 a = 0; b = 1;
 
-% f = @(x) (1+pi^2)*sin(pi*x);
-% u_exact = @(x) sin(pi*x);
+f = @(x) (1+pi^2)*sin(pi*x);
+u_exact = @(x) sin(pi*x);
 
-% f = @(x) (1+pi^2)*cos(pi*x)-1;
-% u_exact = @(x) cos(pi*x)-1;
-
-u_exact = @(x) (x.^4 - x);
-f = @(x) (x.^4 - 12*x.^2 - x);
+% u_exact = @(x) (x.^4 - x);
+% f = @(x) (x.^4 - 12*x.^2 - x);
 
 switch VhMethod
     case 1
         tic
         [u_interior, nodos] = pol_lineales(N,a,b,f,integrationMethod);
         time = toc;
+
         % Calculo el error fuera para no contaminar tiempo de ejecución
-        error = max(abs(u_exact(nodos) - u_interior));
+        u = [0;u_interior;0];
+        error = calc_error_L2(VhMethod, nodos, u, u_exact);
     case 2
         tic
         [u_interior, nodos] = pol_cuadraticos(N,a,b,f,integrationMethod);
         time = toc;
+
         % Calculo el error fuera para no contaminar el tiempo de ejecución
-        % error = max(abs(u_exact(nodos) - u_interior)) ;
-        error = sqrt(mean((u_exact(nodos) - u_interior).^2 ));
+        u = [0;u_interior;0];
+        error = calc_error_L2(VhMethod, nodos, u, u_exact);
+
 end
 end
 
@@ -66,10 +67,10 @@ for k = 1:N
     % Calculo integral local (respecto al elemento k-esimo)
 
     % Proyección sobre varphi_k (la que baja) en el intervalo [x_k, x_{k+1}]
-    int_1 = aprox_integral(integrationMethod,0,1,f_local_1,10);
+    int_1 = aprox_integral(integrationMethod,0,1,f_local_1);
 
     % Proyección sobre varphi_k+1 (la que sube) en el intervalo [x_k, x_{k+1}]
-    int_2 = aprox_integral(integrationMethod,0,1,f_local_2,10);
+    int_2 = aprox_integral(integrationMethod,0,1,f_local_2);
 
     % F(k) = F((k-1)+1) será todos los cachos que involucren en a varphi_k eso son la subida de [x_{k-1}, x_k] (de la iteración previa)
     % Y el aporte de la bajada en [x_k, x_{k+1}]
@@ -82,8 +83,6 @@ F_interior = F(2:end-1);
 
 u_interior = S  \ F_interior;
 
-% Nodos interiores
-nodos = nodos(2:end-1);
 end
 
 function [u_interior, nodos] = pol_cuadraticos(N, a, b, f, integrationMethod)
@@ -144,9 +143,9 @@ for k = 1:N
     f_local_2 = @(x) f(x_k+x*h) .* phi_2(x) * h;
     f_local_3 = @(x) f(x_k+x*h) .* phi_3(x) * h;
 
-    int_1 = aprox_integral(integrationMethod,0,1,f_local_1,10);
-    int_2 = aprox_integral(integrationMethod,0,1,f_local_2,10);
-    int_3 = aprox_integral(integrationMethod,0,1,f_local_3,10);
+    int_1 = aprox_integral(integrationMethod,0,1,f_local_1);
+    int_2 = aprox_integral(integrationMethod,0,1,f_local_2);
+    int_3 = aprox_integral(integrationMethod,0,1,f_local_3);
 
     % Ensamblar usando los indices reasignados
     F(id_izq) = F(id_izq) + int_1;
@@ -159,32 +158,21 @@ S = S(2:end-1,2:end-1);
 F = F(2:end-1);
 
 u_interior =  S \ F;
-nodos = nodos(2:end-1);
-
 end
 
-function [aproxIntegral] = aprox_integral(integrationMethod,a,b,f,n)
-% Malla equiespaciada
-h = (b-a) / n;
-malla = linspace(a,b,n+1); % N subintervalos, N+1 nodos
-
-% Definimos índices para no repetirlos todo el rato
-i = 1 : n;       % Lado izquierdo (1:end)
-j = 2 : n + 1;   % Lado derecho (2:end)
+function [val] = aprox_integral(integrationMethod,a,b,f)
+h = b - a;
 
 switch integrationMethod
     case 1 % Rectángulo (Izquierda)
-        aproxIntegral = h * sum(f(malla(i)));
+        val = h * f(a);
 
     case 2 % Punto Medio
-        aproxIntegral = h * sum(f((malla(i) + malla(j)) / 2));
+        val = h * f((a+b)/2);
 
-    case 3 % Trapecio
-        aproxIntegral = (h / 2) * sum(f(malla(i)) + f(malla(j)));
+    case 3 % Simpson
+        val = (h / 6) * (f(a) + 4*f((a+b)/2) + f(b));
 
-    case 4 % Simpson
-        c = (malla(i) + malla(j)) / 2; % Ptos. centrados
-        aproxIntegral = (h / 6) * sum(f(malla(i)) + 4*f(c) + f(malla(j)));
 end
 end
 
