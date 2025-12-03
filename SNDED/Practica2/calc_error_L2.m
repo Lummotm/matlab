@@ -8,6 +8,7 @@ switch VhMethod
     case 2
         error  = error_cuadratico(nodos,u_h,u_exact);
 end
+
 end
 
 function error = error_lineal(nodos,u_h,u_exact)
@@ -41,6 +42,10 @@ end
 
 
 function error = error_cuadratico(nodos,u_h,u_exact)
+% La función que aproxima bien la solución será u_h que no se expresa como la suma de los u_h(i)*phi_i(x)
+% Uso la misma lógica, que para el ensamblado considero, trabajando por elementos y calculando la contibución de cada uno
+% Y usando esta función calculo su aprox en norma L2 (pasando al intervalo de referencia)
+
 phi = {
     @(x) (2*x-1).*(x-1);
     @(x) x.*(1-x)*4;
