@@ -1,0 +1,65 @@
+#set page(
+  paper: "a4",
+)
+
+= Práctica 2 (Ejercicio 6)
+David Nikolov Yordanov
+
+Queremos aproximar la ecuación eliptica:
+$ -u'' + u = f(x), " " u(0) = u(1) = 0 $
+
+donde $f(x) = (1 + pi^2) sin(pi x)$.
+
+== La aproximación
+
+Consideramos una función test, $v in V = H^1_0 = { v in S^1: u'(0) = u'(1) = 0 }$.
+
+Multiplicamos pues a la expresión que queremos aproximar:
+$ -u''v + u v = f(x) v $
+
+Integrando en $[0,1]$ tenemos:
+$ integral_0^1 -u''v + u v " " d x= integral_0^1 f v " " d x $
+// Revisar como tagear ecuaciones para poder referenciarlas entre si
+
+Aplicando la regla de la cadena en el primer término de la suma:
+$ integral_0^1 -u''v " " d x = underbrace(-u'v]_0^1, 0) + integral_0^1 u'v' " " d x = integral_0^1 u'v " " d x $
+
+Volviendo a la ecuacion primera tenemos que la expresión en forma débil será:
+// la primera de la itnegral, no se como referenciarla
+
+$ integral_0^1 u' v' " "d x + integral_0^1 u v " " d x = integral_0^1 f v " " d x $
+
+Consideramos ahora el Método Galerkin, es decir, trabajamos en un espacio discreto $V_h subset V$, como el espacio es finito podemos considerar una base del mismo ${phi_i (x)}_(i=1)^N$.
+
+La solución aproximada se definira como $u_h (x) = sum_(j=1)^N c_j phi_j (x)$. También se puede considerar en vez de la $v$ trabajar con las $phi_i$ de la base.
+
+Llevando la aproximación a la formulación débil nos deja con:
+$
+  c_j ( integral_0^1 phi_j ' phi_i ' " " d x + integral_0^1 phi_j phi_i " " d x ) = integral_0^1 f phi_i " " d x "    " i = 1,...,N
+$
+
+Vectorialmente:
+$
+  c(K+M) = F
+$
+
+En este trabajo, estudiamos los casos de aproximación por polinomios lineales a trozos y polinomios cuadráticos a trozos.
+
+
+#pagebreak()
+
+== Elementos Lineleas
+
+Trabajamos en intervalos equiespaciados en el $[0,1]$.
+
+Suponemos el espacio $ V_h = { phi_k (x) : phi_k |_[x_k,x_(k+1)] "lineal " } $
+
+Consideramos primero un intervalo de referencia $[0,1]$, y definimos las funciones base lineales en este intervalo:
+$
+  phi_1(x) = 1 - x \
+  phi_2 (x) = x
+$
+
+Que cumplen $phi_1 (0) = phi_2 (1) = 1 ", " phi_1(1) = phi_2(0) = 0$.
+
+
