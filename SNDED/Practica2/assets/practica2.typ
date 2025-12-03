@@ -43,6 +43,10 @@ $
   c(K+M) = F
 $
 
+Las matrices K y M, en general se denominan, matriz de rigidez y masa respectivamente.
+
+Con coeficientes: $M_(i j) = integral_Omega phi_i phi_j " " d x$, $K_(i j) = integral_Omega phi_i ' phi_j ' " " d x$.
+
 En este trabajo, estudiamos los casos de aproximación por polinomios lineales a trozos y polinomios cuadráticos a trozos.
 
 
@@ -52,14 +56,18 @@ En este trabajo, estudiamos los casos de aproximación por polinomios lineales a
 
 Trabajamos en intervalos equiespaciados en el $[0,1]$.
 
-Suponemos el espacio $ V_h = { phi_k (x) : phi_k |_[x_k,x_(k+1)] "lineal " } $
+Suponemos el espacio $ V_h = { phi(x) : phi_k |_[x_k,x_(k+1)] "lineal " } $
 
 Consideramos primero un intervalo de referencia $[0,1]$, y definimos las funciones base lineales en este intervalo:
 $
-  phi_1(x) = 1 - x \
-  phi_2 (x) = x
+  psi_1(x) = 1 - x \
+  psi_2(x) = x
 $
 
-Que cumplen $phi_1 (0) = phi_2 (1) = 1 ", " phi_1(1) = phi_2(0) = 0$.
+Que cumplen $psi_1 (0) = psi_2 (1) = 1 ", " psi_1(1) = psi_2(0) = 0$.
 
+Sabemos las considerando el cambio al intervalo de referencia los coeficientes serán de la forma:
+$
+  M_(i j) = integral_Omega phi_i phi_j " " d x = h integral_0^1 psi_1 psi_2
+$
 
