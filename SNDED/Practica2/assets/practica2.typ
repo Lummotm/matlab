@@ -1,6 +1,7 @@
 #set page(
   paper: "a4",
 )
+#set math.frac(style: "skewed") //Fuerza que la fracciones sean facheras
 
 = Práctica 2 (Ejercicio 6)
 David Nikolov Yordanov
@@ -68,6 +69,37 @@ Que cumplen $psi_1 (0) = psi_2 (1) = 1 ", " psi_1(1) = psi_2(0) = 0$.
 
 Sabemos las considerando el cambio al intervalo de referencia los coeficientes serán de la forma:
 $
-  M_(i j) = integral_Omega phi_i phi_j " " d x = h integral_0^1 psi_1 psi_2
+  M_(i j) = integral_Omega phi_i phi_j " " d x = h integral_0^1 psi_i psi_j " " d x
+  K_(i j) = integral_Omega phi_i ' phi_j ' " " d x = h / h^2 integral_0^1 psi_i ' psi_j ' " " d x
 $
+
+Donde los $psi_l$ se escogeran de tal forma que mantengan la pendiente, si tiene pendiente negativa se toma $psi_1$, si es positiva entonces se considerara $psi_2$.
+
+Luego tendremos que:
+// Revisar si se pueden forzar que las fracciones sean skewed solo para la matriz
+$
+  M = h/6 mat(
+    4, 1, 0, 0, ..., 0, 0;
+    1, 4, 1, 0, ..., 0, 0;
+    0, 1, 4, 1, ..., 0, 0;
+    dots.v, dots.v, dots.v, dots.v, dots.down, dots.v, dots.v;
+    0, 0, 0, 0, dots, 1, 4;
+  )
+$
+$
+  K = 1/h mat(
+    2, -1, 0, 0, ..., 0, 0;
+    -1, 2, -1, 0, ..., 0, 0;
+    0, -1, 2, -1, ..., 0, 0;
+    dots.v, dots.v, dots.v, dots.v, dots.down, dots.v, dots.v;
+    0, 0, 0, 0, dots, -1, 2;
+  )
+$
+
+
+
+
+
+
+
 
