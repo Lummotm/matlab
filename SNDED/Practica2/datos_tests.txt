@@ -1,53 +1,40 @@
->> test_convergencia % Caso polinomio
-Con valores I = 10 , J = 110 , TypeError = 1
-    1.9982
-    1.9255
+>> test_convergencia
+Con valores I = 10, J = 110, Método Integración Rectángulo
+Error 1
+     2.6869e-003   665.7980e-006   295.4249e-006   166.0810e-006   106.2636e-006    73.7835e-006    54.2035e-006    41.4972e-006    32.7867e-006    26.5565e-006    21.9470e-006
 
-Con valores I = 10 , J = 110 , TypeError = 2
-    1.9993
-    2.4468
+Ajuste 1
+    2.0039
 
-Con valores I = 10 , J = 110 , TypeError = 3
-    1.9982
-    1.9255
+Error 2
+     2.8990e-003   718.2595e-006   318.6927e-006   179.1596e-006   114.6310e-006    79.5931e-006    58.4714e-006    44.7646e-006    35.3681e-006    28.6474e-006    23.6750e-006
 
-Con valores I = 10 , J = 110 , TypeError = 4
-    1.9990
-    4.0091
+Ajuste 2
+    2.0040
 
+Con valores I = 10, J = 110, Método Integración Pto. Medio
+Error 1
+     8.5830e-003     2.1474e-003   954.5235e-006   536.9454e-006   343.6528e-006   238.6507e-006   175.3365e-006   134.2426e-006   106.0686e-006    85.9158e-006    71.0049e-006
 
->> test_convergencia % Caso coseno
-Con valores I = 10 , J = 110 , TypeError = 1
-    1.9982
-    1.9255
+Ajuste 1
+    1.9997
 
-Con valores I = 10 , J = 110 , TypeError = 2
-    1.9993
-    2.4468
+Error 2
+     1.4929e-003   361.8738e-006   159.8897e-006    89.7519e-006    57.3860e-006    39.8306e-006    29.2541e-006    22.3930e-006    17.6908e-006    14.3281e-006    11.8405e-006
 
-Con valores I = 10 , J = 110 , TypeError = 3
-    1.9982
-    1.9255
+Ajuste 2
+    2.0138
 
-Con valores I = 10 , J = 110 , TypeError = 4
-    1.9990
-    4.0091
+Con valores I = 10, J = 110, Método Integración Simpson
+Error 1
+     5.8865e-003     1.4716e-003   654.0495e-006   367.9024e-006   235.4574e-006   163.5121e-006   120.1313e-006    91.9755e-006    72.6720e-006    58.8643e-006    48.6482e-006
 
+Ajuste 1
+    2.0000
 
->> test_convergencia % Caso seno
-Con valores I = 10 , J = 110 , TypeError = 1
-    1.9982
-    1.9255
+Error 2
+   126.8345e-006    15.7835e-006     4.6727e-006     1.9707e-006     1.0089e-006   583.7973e-009   367.6229e-009   246.2716e-009   172.9610e-009   126.0868e-009    94.7299e-009
 
-Con valores I = 10 , J = 110 , TypeError = 2
-    1.9993
-    2.4468
-
-Con valores I = 10 , J = 110 , TypeError = 3
-    1.9982
-    1.9255
-
-Con valores I = 10 , J = 110 , TypeError = 4
-    1.9990
-    4.0091
+Ajuste 2
+    3.0020
 

@@ -93,6 +93,7 @@ phi_3 = @(x) (2*x-1).*x;
 
 num_nodos = 2*N+1; % Consideramos aquí los nodos intermedios también
 nodos = linspace(a,b,num_nodos)';
+
 % El h es el valor entre 2 nodos sin considerar el central, ya que el cambio lo hago desde
 % x_k, x_k+1 a 0,1 defino cuadraticos en 0,1 luego el nodo central vendra dado a posteriori
 h = nodos(3) - nodos(1); % aprovecho el calculo de la malla

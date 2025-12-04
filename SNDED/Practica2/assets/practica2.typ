@@ -1,7 +1,7 @@
 #set page(
   paper: "a4",
 )
-#set math.frac(style: "skewed") //Fuerza que la fracciones sean facheras
+
 
 = Práctica 2 (Ejercicio 6)
 David Nikolov Yordanov
@@ -23,7 +23,7 @@ $ integral_0^1 -u''v + u v " " d x= integral_0^1 f v " " d x $
 // Revisar como tagear ecuaciones para poder referenciarlas entre si
 
 Aplicando la regla de la cadena en el primer término de la suma:
-$ integral_0^1 -u''v " " d x = underbrace(-u'v]_0^1, 0) + integral_0^1 u'v' " " d x = integral_0^1 u'v " " d x $
+$ integral_0^1 -u''v " " d x = underbrace([-u'v]_0^1, 0) + integral_0^1 u'v' " " d x = integral_0^1 u'v " " d x $
 
 Volviendo a la ecuacion primera tenemos que la expresión en forma débil será:
 // la primera de la itnegral, no se como referenciarla
@@ -53,7 +53,7 @@ En este trabajo, estudiamos los casos de aproximación por polinomios lineales a
 
 #pagebreak()
 
-== Elementos Lineleas
+== Elementos Lineales
 
 Trabajamos en intervalos equiespaciados en el $[0,1]$.
 
@@ -77,6 +77,7 @@ Donde los $psi_l$ se escogeran de tal forma que mantengan la pendiente, si tiene
 
 Luego tendremos que:
 // Revisar si se pueden forzar que las fracciones sean skewed solo para la matriz
+#set math.frac(style: "skewed") //Fuerza que la fracciones sean facheras
 $
   M = h/6 mat(
     4, 1, 0, 0, ..., 0, 0;
@@ -95,6 +96,9 @@ $
     0, 0, 0, 0, dots, -1, 2;
   )
 $
+
+#set math.frac(style: "vertical") //Fuerza que la fracciones sean facheras
+
 
 
 

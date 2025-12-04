@@ -38,6 +38,7 @@ for k = 1:N
 end
 
 error = sqrt(error); % El error global sera la raiz cuadrada de los errores de cada proyección
+
 end
 
 
@@ -76,4 +77,5 @@ for k = 1:N
 end
 
 error = sqrt(error); % El error global sera la raiz cuadrada de los errores de cada proyección
+
 end
