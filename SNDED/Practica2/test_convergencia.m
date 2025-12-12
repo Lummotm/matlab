@@ -26,24 +26,25 @@ for j = 1:3
     disp("")
 
 
-    disp("Error 1")
-    format shortEng
-    disp(error_1)
-    p = polyfit(log(h),log(error_1),1);
 
     disp("Ajuste 1")
     format("default")
+    p = polyfit(log(h),log(error_1),1);
     p1 = p(1);
     disp(p1);
+
+    disp("Ajuste 2")
+    format("default")
+    p = polyfit(log(h),log(error_2),1);
+    p2 = p(1);
+    disp(p2);
+
+    disp("Error 1")
+    format shortEng
+    disp(error_1)
 
     disp("Error 2")
     format shortEng
     disp(error_2)
-    p = polyfit(log(h),log(error_2),1);
-
-    disp("Ajuste 2")
-    format("default")
-    p2 = p(1);
-    disp(p2);
 end
 
