@@ -26,7 +26,7 @@
 
 \section{Introducción}
 Este informe analiza la resolución numérica de la ecuación del calor mediante diferencias finitas.
-Las tablas y algunas gráficas extra se han incluido dentro de los anexos.
+Las \hyperlink{tablas}{\textbf{[tablas]}} y algunas gráficas extra se han incluido dentro de los anexos.
 \noindent \textbf{Notación:} \(J\) es el número de nodos espaciales con paso \(h = \sfrac{1}{J}\), y \(N\) el número de pasos temporales con paso \(k = \sfrac{T}{N}\). Definimos el operador de diferencias centrales espaciales como \(\delta_x^2 U_j = U_{j+1} - 2U_j + U_{j-1}\).
 
 \section{Parte 1: Ecuación Homogénea}
@@ -144,7 +144,8 @@ fuerza a que \(k \propto h^2\). Esto ata el error temporal al espacial, impidié
 \noindent Las Figuras~\ref{fig:conv_k_cn} y \ref{fig:conv_k_imp} muestran los resultados de este test.
 \begin{itemize}
 	\item \textbf{Crank-Nicolson (Fig.~\ref{fig:conv_k_cn}):} Confirma claramente el resultado teórico esperado \(E \approx O(k^2)\), con una pendiente \(q \approx 2.0\).
-	\item \textbf{Implícito (Fig.~\ref{fig:conv_k_imp}):} Muestra una pendiente \(q \approx 1.35\) bastante cercana a \(1\), refinando más la malla este valor tiende a \(1\) demostrando nuestro resultado teórico \(E \approx O(k)\).
+	\item \textbf{Implícito (Fig.~\ref{fig:conv_k_imp}):} Muestra una pendiente \(q \approx 1.35\) bastante cercana a \(1\), refinando más la malla este valor tiende a \(1\) demostrando nuestro resultado teórico \(E \approx O(k)\) (más información en las \hyperlink{tablas_implicito_p1}{\textbf{[tablas]}}).
+
 \end{itemize}
 
 
@@ -183,7 +184,7 @@ fuerza a que \(k \propto h^2\). Esto ata el error temporal al espacial, impidié
 	\item \textbf{Implícito (Azul):} Los puntos azules se sitúan por encima de los verdes. Demuestra ser una alternativa estable, pero para alcanzar un nivel de error similar al de Crank-Nicolson, requiere un tiempo de cómputo notablemente mayor. Esto se debe a su convergencia temporal de orden \(q=1\).
 
 
-	\item \textbf{Explícito (Rojo):} Los puntos rojos confirman que, aunque es preciso (error bajo), está muy desplazado a la derecha (tiempo de cómputo alto). Esto se debe a la condición de estabilidad (\(N \propto J^2\)), que obliga a un número excesivo de pasos de tiempo y dispara el coste, volviéndolo ineficiente. Se apreciará posteriormente con el caso del problema no homogéneo \hyperlink{conclusion_p2}{\textbf{[1]}}, la ineficacia del método.
+	\item \textbf{Explícito (Rojo):} Los puntos rojos confirman que, aunque es preciso (error bajo), está muy desplazado a la derecha (tiempo de cómputo alto). Esto se debe a la condición de estabilidad (\(N \propto J^2\)), que obliga a un número excesivo de pasos de tiempo y dispara el coste, volviéndolo ineficiente. Se apreciará posteriormente con el caso del problema \hyperlink{conclusion_p2}{\textbf{[no homogéneo]}}, la ineficacia del método.
 
 \end{itemize}
 
@@ -265,7 +266,7 @@ Nuevamente, el término agrupado \((u_t - u_{xx} - f)\) es exactamente cero por 
 \subsubsection{Convergencia Temporal (q)}
 
 \noindent Se repite el test con \(J=2000\) para aislar el error temporal.
-\noindent Las Figuras~\ref{fig:conv_k_cn_p2} y \ref{fig:conv_k_imp_p2} confirman los resultados teóricos: \(E \approx O(k^2)\) para el método Crank-Nicolson (con \(q \approx 1.95\)) y \(E \approx O(k)\) para el método Implícito (con \(q \approx 0.93\)).
+\noindent Las Figuras~\ref{fig:conv_k_cn_p2} y \ref{fig:conv_k_imp_p2} confirman los resultados teóricos: \(E \approx O(k^2)\) para el método Crank-Nicolson (con \(q \approx 1.95\)) y \(E \approx O(k)\) para el método Implícito con \(q \approx 0.93\) (más información en las \hyperlink{tablas_implicito_p2}{\textbf{[tablas]}}).
 
 \begin{figure}[h!]
 	\centering
@@ -297,8 +298,8 @@ Nuevamente, el término agrupado \((u_t - u_{xx} - f)\) es exactamente cero por 
 	\item \textbf{Explícito (Rojo):} Sus puntos son precisos (error bajo) pero lentos (tiempo de cómputo alto), confirmando que es inviable por su restricción de estabilidad.
 \end{itemize}
 
-\hypertarget{conclusion_p2}{}
-\noindent \textbf{Conclusión (Parte 2):} El método de Crank-Nicolson \( O(k^2+h^2)\) sigue siendo superior. La presencia de un término fuente y condiciones de borde no homogéneas no altera la eficiencia relativa ni el orden de convergencia.
+
+\noindent \hypertarget{conclusion_p2}{\textbf{Conclusión (Parte 2):}} El método de Crank-Nicolson \( O(k^2+h^2)\) sigue siendo superior. La presencia de un término fuente y condiciones de borde no homogéneas no altera la eficiencia relativa ni el orden de convergencia.
 
 \noindent De hecho, este caso hace más visible la superioridad de Crank-Nicolson. Al no tender la solución a cero (como en el caso homogéneo), la prueba es más exigente. Esto resalta la ineficiencia del método explícito (cuyo coste computacional en el régimen estable es prohibitivo) y consolida a Crank-Nicolson como la opción más robusta y eficiente.
 
@@ -423,7 +424,7 @@ Nuevamente, el término agrupado \((u_t - u_{xx} - f)\) es exactamente cero por 
 	\caption{P2 Gráficas de eficiencia con h-fijo.}\label{fig:anexo_h_fijo_p2}
 \end{figure}
 
-\section{Anexo 3: Analisis de convergencia (Tablas)}
+\hypertarget{tablas}{\section{Anexo 3: Analisis de convergencia (Tablas)}}
 
 A continuación se presentan los resultados detallados del análisis de convergencia, calculando el Orden Experimental de Convergencia local mediante la fórmula:
 \[
@@ -450,7 +451,7 @@ Método: Crank-Nicolson. Se observa una convergencia cuadrática perfecta ($p \t
 	\label{tab:p1_espacial}
 \end{table}
 
-\subsection{Convergencia Temporal (Problema 1)}
+\hypertarget{tablas_implicito_p1}{\subsection{Convergencia Temporal (Problema 1)}}
 Comparativa de error absoluto. Se confirma que el método Implícito es de primer orden ($q \approx 1$) y Crank-Nicolson de segundo orden ($q \approx 2$).
 
 \begin{table}[h!]
@@ -471,9 +472,9 @@ Comparativa de error absoluto. Se confirma que el método Implícito es de prime
 	\label{tab:p1_temporal}
 \end{table}
 
-\subsection{Convergencia Temporal (Problema 2)}
+\hypertarget{tablas_implicito_p2}{\subsection{Convergencia Temporal (Problema 2)}
+}
 Análisis con término fuente $f(x,t)$. Se mantiene la consistencia de los órdenes de convergencia.
-
 \begin{table}[h!]
 	\centering
 	\begin{tabular}{|cc|cc|cc|}
