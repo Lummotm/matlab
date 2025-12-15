@@ -8,7 +8,6 @@
 \usepackage{graphicx}
 \usepackage{xfrac} % más fracciones yipee
 \usepackage{hyperref} % referencias
-\usepackage{booktabs}
 
 \title{Práctica 1}
 \author{David Nikolov Yordanov}
@@ -25,89 +24,38 @@
 \clearpage
 
 \section{Introducción}
-Este informe analiza la resolución numérica de la ecuación del calor mediante diferencias finitas.
-Las \hyperlink{tablas}{\textbf{[tablas]}} y algunas gráficas extra se han incluido dentro de los anexos.
-\noindent \textbf{Notación:} \(J\) es el número de nodos espaciales con paso \(h = \sfrac{1}{J}\), y \(N\) el número de pasos temporales con paso \(k = \sfrac{T}{N}\). Definimos el operador de diferencias centrales espaciales como \(\delta_x^2 U_j = U_{j+1} - 2U_j + U_{j-1}\).
+
+En este informe se implementan los métodos explícito, implícito y de Crank-Nicolson para resolver la ecuación del calor en condiciones típicas y en condiciones no homogéneas. \\
+\noindent Usaremos la notación habitual:
+
+\begin{itemize}
+	\item \(J \) será el número de nodos en la partición de espacio y \(h = \sfrac{1}{J}\) distancia entre los nodos.
+	\item \(N\) será el número de nodos en la partición de tiempo y \(k = \sfrac{T}{N}\) distancia entre los nodos.
+	\item \(T\) punto final en tiempo.
+\end{itemize}
 
 \section{Parte 1: Ecuación Homogénea}
-Se resuelve \(\frac{\partial^2 u}{\partial x^2} = \frac{\partial u}{\partial t}\) con \(u(0,t)=u(1,t)=0\) y \(u(x,0) = \sin(2 \pi x)\).
-Buscamos aproximaciones discretas \(\{U_{j}^n\}\) mediante los siguientes esquemas:
 
-\noindent
-\begin{minipage}[t]{0.48\textwidth}
-	\textbf{1. Explícito:}
-	\[ \frac{U_{j}^{n+1} - U_j^{n}}{k} = \frac{1}{h^2} \delta_x^2 U_j^n \]
-\end{minipage}\hfill
-\begin{minipage}[t]{0.48\textwidth}
-	\textbf{2. Implícito:}
-	\[ \frac{U_{j}^{n+1} - U_j^{n}}{k} = \frac{1}{h^2} \delta_x^2 U_j^{n+1} \]
-\end{minipage}
-
-\vspace{0.2cm}
-\noindent \textbf{3. Crank-Nicolson:}
-Definimos la aproximación en el paso intermedio como \( U_j^{n+1/2} = \frac{U_j^{n+1} + U_j^n}{2} \). El esquema es:
-\[ \frac{U_{j}^{n+1} - U_j^{n}}{k} = \frac{1}{h^2} \delta_x^2 U_j^{n+1/2} \]
-
-\subsection{Justificación Teórica del Error}
-El error de truncamiento local \(T\) se obtiene sustituyendo la solución exacta \(u(x,t)\) en los esquemas numéricos.
-
-\noindent \textbf{1. Error Espacial (Igual en los 3 métodos):}
-Expandimos Taylor en espacio para \(u(x\pm h, t)\):
-\[ u(x\pm h, t) = u(x,t) \pm h \frac{\partial u}{\partial x} + \frac{h^2}{2} \frac{\partial^2 u}{\partial x^2} \pm \frac{h^3}{6} \frac{\partial^3 u}{\partial x^3} + \frac{h^4}{24} \frac{\partial^4 u}{\partial x^4} + O(h^5) \]
-Sumando ambas expresiones, los términos de derivada impar se cancelan:
-\[ \frac{u(x+h, t) - 2u(x,t) + u(x-h, t)}{h^2} = \frac{\partial^2 u}{\partial x^2} + \frac{h^2}{12} \frac{\partial^4 u}{\partial x^4} + O(h^4) \]
-Esto demuestra que la aproximación espacial es de orden \(O(h^2)\).
-
-\vspace{0.2cm}
-\noindent \textbf{2. Error Temporal - Explícito e Implícito (\(O(k)\)):}
-Expandimos \(u(x, t+k)\) en torno a \(t\), obtenemos:
-\[ \frac{u(x, t+k)-u(x, t)}{k} = \frac{\partial u}{\partial t} + \frac{k}{2}\frac{\partial^2 u}{\partial t^2} + O(k^2) \]
-El término proporcional a \(k\) no se cancela, por lo que \(T\) es dominado por el error lineal.
-
-\vspace{0.2cm}
-\noindent \textbf{3. Error Temporal - Crank-Nicolson (\(O(k^2)\)):}
-Expandimos Taylor alrededor del punto medio \(t_{n+1/2} = t_n + k/2\):
-\begin{align*}
-	u(x, t_{n+1}) & = u(x, t_{n+1/2}) + \frac{k}{2} \frac{\partial u}{\partial t}(x, t_{n+1/2}) + \frac{k^2}{8} \frac{\partial^2 u}{\partial t^2}(x, t_{n+1/2}) + O(k^3) \\
-	u(x, t_{n})   & = u(x, t_{n+1/2}) - \frac{k}{2} \frac{\partial u}{\partial t}(x, t_{n+1/2}) + \frac{k^2}{8} \frac{\partial^2 u}{\partial t^2}(x, t_{n+1/2}) + O(k^3)
-\end{align*}
-Restando ambas ecuaciones, los términos pares se cancelan:
-\[ \frac{u^{n+1} - u^n}{k} = \frac{\partial u}{\partial t}(x, t_{n+1/2}) + O(k^2) \]
-Sumando ambas, aproximamos la función en el punto medio:
-\[ \frac{u^{n+1} + u^n}{2} = u(x, t_{n+1/2}) + O(k^2) \]
-Combinando esto con el error espacial, el error global \(T\) resulta \(O(k^2) + O(h^2)\).
-
-\subsection{Análisis de Estabilidad de Von Neumann}
-El análisis de estabilidad lineal estudia la propagación de errores a lo largo del tiempo. Definimos el error numérico \(\epsilon_j^n\) como la diferencia entre la solución numérica obtenida \(U_j^n\) y la solución exacta \(u(x_j, t_n)\):
+Estamos estudiando la ecuación del calor de homogénea:
 \[
-	\epsilon_j^n = U_j^n - u(x_j, t_n)
+	\frac{\partial^2 u}{\partial x^2} = \frac{\partial u}{\partial t}
+	\quad \text{con condiciones Dirichlet} \quad
 \]
-Consideramos una perturbación en forma de modo de Fourier:
-\[
-	\epsilon_j^n = \xi^n e^{i \beta (jh)}
-\]
-donde \(\xi\) es el factor de amplificación y \(\beta\) el número de onda. Para que el método sea estable y los errores no crezcan descontroladamente, requerimos \( |\xi| \le 1 \).
 
-\paragraph{1. Método Explícito:}
-Sustituyendo en la ecuación en diferencias y definiendo \(\mu = k/h^2\), obtenemos:
-\[ \xi = 1 - 4\mu \sin^2\left(\frac{\beta h}{2}\right) \]
-Para garantizar \( |\xi| \le 1 \), es necesario que \( -1 \le 1 - 4\mu \), lo que implica la restricción de estabilidad condicional:
-\[ \mu \le \frac{1}{2} \]
+\noindent Consideramos de condición inicial una autofunción del problema \(u_0(x) = \sin(2 \pi x)\) que nos lleva a que el problema tenga solución exacta \(u(x,t) = e^{-4\pi^2 t} \sin(2 \pi x)\) \\
 
-\paragraph{2. Método Implícito:}
-La ecuación del error sigue el esquema \( (1 - \mu \delta_x^2) \epsilon^{n+1} = \epsilon^n \). En el dominio de frecuencia:
-\[ \xi \left(1 + 4\mu \sin^2\left(\frac{\beta h}{2}\right)\right) = 1 \implies \xi = \frac{1}{1 + 4\mu \sin^2(\frac{\beta h}{2})} \]
-Dado que el denominador es siempre \(\ge 1\) para todo \(\mu > 0\), se cumple siempre \( |\xi| \le 1 \). El método es \textbf{incondicionalmente estable}.
+\noindent Buscamos aproximaciones de la forma \(\{U_{j}^n\}_{j=1,n=1}^{J-1,N}\) donde J, N son el número de nodos de espacio y tiempo respectivamente. Tenemos varios métodos para calcular estas:
 
-\paragraph{3. Método Crank-Nicolson:}
-El error evoluciona según \( (1 - \frac{\mu}{2} \delta_x^2) \epsilon^{n+1} = (1 + \frac{\mu}{2} \delta_x^2) \epsilon^n \). El factor de amplificación es:
-\[ \xi = \frac{1 - 2\mu \sin^2(\frac{\beta h}{2})}{1 + 2\mu \sin^2(\frac{\beta h}{2})} \]
-Como \( |1 - A| \le |1 + A| \) para cualquier \(A \ge 0\), tenemos que \( |\xi| \le 1 \) para todo \(\mu > 0\). Es \textbf{incondicionalmente estable}.
+\begin{align}
+	 & \text{Explícito:}     & \frac{U_{j}^{n+1} - U_j^{n}}{k} & = \frac{1}{h^2}(U_{j+1}^n - 2U_{j}^n + U_{j-1}^n)                                                                   \\
+	 & \text{Implícito:}     & \frac{U_{j}^{n+1} - U_j^{n}}{k} & = \frac{1}{h^2}(U_{j+1}^{n+1} - 2U_{j}^{n+1} + U_{j-1}^{n+1})                                                       \\
+	 & \text{Crank-Nicolson} & \frac{U_{j}^{n+1} - U_j^{n}}{k} & = \frac{1}{2h^2} \left[ (U_{j+1}^n - 2U_{j}^n + U_{j-1}^n) + (U_{j+1}^{n+1} - 2U_{j}^{n+1} + U_{j-1}^{n+1}) \right]
+\end{align}
 
-\paragraph{Justificación del Término Fuente:}
-En la Parte 2, la ecuación diferencial es \( u_t = u_{xx} + f(x,t) \). Tanto el esquema numérico discreto como la solución exacta contienen este término \( f(x,t) \) sumando en el lado derecho.
-Al calcular la ecuación del error restando la expresión exacta de la numérica (\( \epsilon = U - u \)), el término \( f(x,t) \) aparece en ambos términos de la resta y se cancela exactamente (\( f - f = 0 \)).
-En consecuencia, la evolución del error sigue estando gobernada exclusivamente por la parte homogénea de la ecuación, por lo que las condiciones de estabilidad demostradas anteriormente se aplican sin cambios.
+\noindent Sabemos por la teoría que el error de la aproximación es aproximadamente: \(O(k+h^2)\) para los métodos explícito e implícito, y \(O(k^2+h^2)\) para el método Crank-Nicolson. (El método explícito solo converge para \(\mu \leq 0.5\))
+
+\noindent Queremos ver mediante esta práctica que estas cotas se cumplen y comparar la eficiencia de los métodos.
+
 
 \clearpage
 \subsection{Análisis de Convergencia}
@@ -144,8 +92,7 @@ fuerza a que \(k \propto h^2\). Esto ata el error temporal al espacial, impidié
 \noindent Las Figuras~\ref{fig:conv_k_cn} y \ref{fig:conv_k_imp} muestran los resultados de este test.
 \begin{itemize}
 	\item \textbf{Crank-Nicolson (Fig.~\ref{fig:conv_k_cn}):} Confirma claramente el resultado teórico esperado \(E \approx O(k^2)\), con una pendiente \(q \approx 2.0\).
-	\item \textbf{Implícito (Fig.~\ref{fig:conv_k_imp}):} Muestra una pendiente \(q \approx 1.35\) bastante cercana a \(1\), refinando más la malla este valor tiende a \(1\) demostrando nuestro resultado teórico \(E \approx O(k)\) (más información en las \hyperlink{tablas_implicito_p1}{\textbf{[tablas]}}).
-
+	\item \textbf{Implícito (Fig.~\ref{fig:conv_k_imp}):} Muestra una pendiente \(q \approx 1.35\) bastante cercana a \(1\), refinando más la malla este valor tiende a \(1\) demostrando nuestro resultado teórico \(E \approx O(k)\).
 \end{itemize}
 
 
@@ -184,7 +131,7 @@ fuerza a que \(k \propto h^2\). Esto ata el error temporal al espacial, impidié
 	\item \textbf{Implícito (Azul):} Los puntos azules se sitúan por encima de los verdes. Demuestra ser una alternativa estable, pero para alcanzar un nivel de error similar al de Crank-Nicolson, requiere un tiempo de cómputo notablemente mayor. Esto se debe a su convergencia temporal de orden \(q=1\).
 
 
-	\item \textbf{Explícito (Rojo):} Los puntos rojos confirman que, aunque es preciso (error bajo), está muy desplazado a la derecha (tiempo de cómputo alto). Esto se debe a la condición de estabilidad (\(N \propto J^2\)), que obliga a un número excesivo de pasos de tiempo y dispara el coste, volviéndolo ineficiente. Se apreciará posteriormente con el caso del problema \hyperlink{conclusion_p2}{\textbf{[no homogéneo]}}, la ineficacia del método.
+	\item \textbf{Explícito (Rojo):} Los puntos rojos confirman que, aunque es preciso (error bajo), está muy desplazado a la derecha (tiempo de cómputo alto). Esto se debe a la condición de estabilidad (\(N \propto J^2\)), que obliga a un número excesivo de pasos de tiempo y dispara el coste, volviéndolo ineficiente. Se apreciará posteriormente con el caso del problema no homogéneo \hyperlink{conclusion_p2}{\textbf{[1]}}, la ineficacia del método.
 
 \end{itemize}
 
@@ -193,7 +140,7 @@ fuerza a que \(k \propto h^2\). Esto ata el error temporal al espacial, impidié
 \noindent \textbf{Nota:} Las gráficas de eficiencia solicitadas en el enunciado (para \(k\) fijo variando \(h\) y viceversa) se han incluido en el Anexo (véanse las Figuras~\ref{fig:anexo_k_fijo} y~\ref{fig:anexo_h_fijo}). Se aprecia en ellas lo siguiente: en las gráficas \textbf{h-fijo} (Fig.~\ref{fig:anexo_h_fijo}), el error de \textbf{Crank-Nicolson} es casi plano (dominado por el ``suelo'' espacial \(O(h^2)\)) mientras el \textbf{Implícito} muestra la caída de su error temporal \(O(k)\). En las gráficas \textbf{k-fijo} (Fig.~\ref{fig:anexo_k_fijo}), se ve el error espacial \(O(h^2)\) disminuir hasta chocar con el ``suelo'' temporal \(O(k^q)\). Finalmente, el \textbf{Explícito} (`h-fijo`) muestra el ``rebote'' del error de redondeo debido al número excesivo de pasos (\(N \propto J^2\)).
 
 \clearpage
-\section{Ecuación No Homogénea}
+\section{Parte 2: Ecuación No Homogénea}
 
 \noindent Se considera ahora el problema no homogéneo:
 \[
@@ -213,36 +160,7 @@ fuerza a que \(k \propto h^2\). Esto ata el error temporal al espacial, impidié
 
 \noindent \textbf{Nota:} Las gráficas de eficiencia (`k-fijo` y `h-fijo`) para esta parte también se incluyen en el Anexo (véanse las Figuras~\ref{fig:anexo_k_fijo_p2} y~\ref{fig:anexo_h_fijo_p2}).
 
-\subsection{Justificación Teórica del Error (Caso No Homogéneo)}
-
-Para la ecuación no homogénea \( u_t = u_{xx} + f(x,t) \), analizamos el error de truncamiento local \( T \) sustituyendo la solución exacta \( u \) en el esquema numérico y restando el término fuente discreto.
-
-\subsubsection*{Métodos Explícito e Implícito}
-Sustituyendo las expansiones de Taylor alrededor del punto \((x_j, t_n)\) en la definición del error de truncamiento:
-\begin{align*}
-	T_j^n & = \left[ \frac{u^{n+1} - u^n}{k} - \frac{1}{h^2}\delta_x^2 u \right] - f(x_j, t_n)                                        \\
-	      & = \left[ u_t + \frac{k}{2}u_{tt} + O(k^2) \right] - \left[ u_{xx} + \frac{h^2}{12}u_{xxxx} + O(h^4) \right] - f(x_j, t_n) \\
-	      & = \left( u_t - u_{xx} - f \right) + \frac{k}{2}u_{tt} - \frac{h^2}{12}u_{xxxx} + \dots
-\end{align*}
-Como \(u(x,t)\) es la solución exacta del problema, satisface la ecuación diferencial \( u_t - u_{xx} - f = 0 \). Por tanto, el primer paréntesis desaparece:
-\[
-	T_j^n = 0 + O(k) + O(h^2)
-\]
-
-\subsubsection*{Método de Crank-Nicolson}
-El esquema promedia el término fuente en el tiempo. Utilizando las expansiones de Taylor centradas en \((x_j, t_{n+1/2})\):
-\begin{align*}
-	T_j^{n+1/2} & = \left[ \frac{u^{n+1} - u^n}{k} - \frac{1}{2h^2}\delta_x^2(u^{n+1} + u^n) \right] - \frac{f^{n+1} + f^n}{2}                                   \\
-	            & = \left[ u_t + O(k^2) \right] - \left[ u_{xx} + O(k^2) + O(h^2) \right] - \underbrace{\left[ f + O(k^2) \right]}_{\text{ajustar al Taylor } f} \\
-	            & = \left( u_t - u_{xx} - f \right) + O(k^2) + O(h^2)
-\end{align*}
-Nuevamente, el término agrupado \((u_t - u_{xx} - f)\) es exactamente cero por la definición de la ecuación diferencial. El error resultante conserva el orden cuadrático:
-\[
-	T_j^{n+1/2} = O(k^2) + O(h^2)
-\]
-
 \clearpage
-
 \subsection{Análisis de Convergencia (Parte 2)}
 
 \subsubsection{Convergencia Espacial (p)}
@@ -262,11 +180,12 @@ Nuevamente, el término agrupado \((u_t - u_{xx} - f)\) es exactamente cero por 
 	\caption{P2 Convergencia espacial (p) para Implícito sin ajuste \(\mu\). Pendiente \(p \approx 0.91\).}\label{fig:conv_h_no_ajustado_p2}
 \end{figure}
 
+
 \clearpage
 \subsubsection{Convergencia Temporal (q)}
 
 \noindent Se repite el test con \(J=2000\) para aislar el error temporal.
-\noindent Las Figuras~\ref{fig:conv_k_cn_p2} y \ref{fig:conv_k_imp_p2} confirman los resultados teóricos: \(E \approx O(k^2)\) para el método Crank-Nicolson (con \(q \approx 1.95\)) y \(E \approx O(k)\) para el método Implícito con \(q \approx 0.93\) (más información en las \hyperlink{tablas_implicito_p2}{\textbf{[tablas]}}).
+\noindent Las Figuras~\ref{fig:conv_k_cn_p2} y \ref{fig:conv_k_imp_p2} confirman los resultados teóricos: \(E \approx O(k^2)\) para el método Crank-Nicolson (con \(q \approx 1.95\)) y \(E \approx O(k)\) para el método Implícito (con \(q \approx 0.93\)).
 
 \begin{figure}[h!]
 	\centering
@@ -298,14 +217,14 @@ Nuevamente, el término agrupado \((u_t - u_{xx} - f)\) es exactamente cero por 
 	\item \textbf{Explícito (Rojo):} Sus puntos son precisos (error bajo) pero lentos (tiempo de cómputo alto), confirmando que es inviable por su restricción de estabilidad.
 \end{itemize}
 
-
-\noindent \hypertarget{conclusion_p2}{\textbf{Conclusión (Parte 2):}} El método de Crank-Nicolson \( O(k^2+h^2)\) sigue siendo superior. La presencia de un término fuente y condiciones de borde no homogéneas no altera la eficiencia relativa ni el orden de convergencia.
+\hypertarget{conclusion_p2}{}
+\noindent \textbf{Conclusión (Parte 2):} El método de Crank-Nicolson \( O(k^2+h^2)\) sigue siendo superior. La presencia de un término fuente y condiciones de borde no homogéneas no altera la eficiencia relativa ni el orden de convergencia.
 
 \noindent De hecho, este caso hace más visible la superioridad de Crank-Nicolson. Al no tender la solución a cero (como en el caso homogéneo), la prueba es más exigente. Esto resalta la ineficiencia del método explícito (cuyo coste computacional en el régimen estable es prohibitivo) y consolida a Crank-Nicolson como la opción más robusta y eficiente.
 
 
 \clearpage
-\section{Anexo 1: Gráficas P1}
+\section{Anexo - P1}
 
 \begin{figure}[h!]
 	\centering
@@ -365,7 +284,8 @@ Nuevamente, el término agrupado \((u_t - u_{xx} - f)\) es exactamente cero por 
 \end{figure}
 
 \clearpage
-\section{Anexo 2: Gráficas P2}
+\clearpage
+\section{Anexo - P2}
 
 \begin{figure}[h!]
 	\centering
@@ -422,74 +342,5 @@ Nuevamente, el término agrupado \((u_t - u_{xx} - f)\) es exactamente cero por 
 
 	\caption{P2 Gráficas de eficiencia con h-fijo.}\label{fig:anexo_h_fijo_p2}
 \end{figure}
-
-\hypertarget{tablas}{\section{Anexo 3: Analisis de convergencia (Tablas)}}
-
-A continuación se presentan los resultados detallados del análisis de convergencia, calculando el Orden Experimental de Convergencia local mediante la fórmula:
-\[
-	p \approx \frac{\log(E_{i-1}/E_i)}{\log(h_{i-1}/h_i)}
-\]
-
-\subsection{Convergencia Espacial (Problema 1)}
-Método: Crank-Nicolson. Se observa una convergencia cuadrática perfecta ($p \to 2$) a medida que se refina la malla.
-
-\begin{table}[h!]
-	\centering
-	\begin{tabular}{|ccccc|}
-		\toprule
-		$J$ & $h$     & Error    & Ratio & Orden ($p$) \\
-		\midrule
-		50  & 0.02000 & 2.62e-02 & -     & -           \\
-		100 & 0.01000 & 6.51e-03 & 4.03  & 2.0107      \\
-		200 & 0.00500 & 1.62e-03 & 4.01  & 2.0027      \\
-		400 & 0.00250 & 4.06e-04 & 4.00  & 2.0007      \\
-		800 & 0.00125 & 1.01e-04 & 4.00  & 2.0002      \\
-		\bottomrule
-	\end{tabular}
-	\caption{Análisis de convergencia espacial para $u_t = u_{xx}$.}
-	\label{tab:p1_espacial}
-\end{table}
-
-\hypertarget{tablas_implicito_p1}{\subsection{Convergencia Temporal (Problema 1)}}
-Comparativa de error absoluto. Se confirma que el método Implícito es de primer orden ($q \approx 1$) y Crank-Nicolson de segundo orden ($q \approx 2$).
-
-\begin{table}[h!]
-	\centering
-	\begin{tabular}{|cc|cc|cc|}
-		\toprule
-		     &         & \multicolumn{2}{c|}{\textbf{Implícito}} & \multicolumn{2}{c}{\textbf{Crank-Nicolson}}                             \\
-		$N$  & $k$     & Error (Abs)                             & Orden ($q$)                                 & Error (Abs) & Orden ($q$) \\
-		\midrule
-		100  & 0.00500 & 3.36e-02                                & -                                           & 1.20e-03    & -           \\
-		200  & 0.00250 & 1.74e-02                                & 0.9449                                      & 2.99e-04    & 2.0057      \\
-		400  & 0.00125 & 8.89e-03                                & 0.9713                                      & 7.44e-05    & 2.0055      \\
-		800  & 0.00063 & 4.49e-03                                & 0.9851                                      & 1.84e-05    & 2.0180      \\
-		1600 & 0.00031 & 2.26e-03                                & 0.9926                                      & 4.36e-06    & 2.0731      \\
-		\bottomrule
-	\end{tabular}
-	\caption{Análisis de convergencia temporal para $u_t = u_{xx}$.}
-	\label{tab:p1_temporal}
-\end{table}
-
-\hypertarget{tablas_implicito_p2}{\subsection{Convergencia Temporal (Problema 2)}
-}
-Análisis con término fuente $f(x,t)$. Se mantiene la consistencia de los órdenes de convergencia.
-\begin{table}[h!]
-	\centering
-	\begin{tabular}{|cc|cc|cc|}
-		\toprule
-		     &         & \multicolumn{2}{c|}{\textbf{Implícito}} & \multicolumn{2}{c}{\textbf{Crank-Nicolson}}                             \\
-		$N$  & $k$     & Error (Rel)                             & Orden ($q$)                                 & Error (Rel) & Orden ($q$) \\
-		\midrule
-		100  & 0.00500 & 4.12e-03                                & -                                           & 1.10e-05    & -           \\
-		200  & 0.00250 & 2.21e-03                                & 0.8962                                      & 2.89e-06    & 1.9311      \\
-		400  & 0.00125 & 1.16e-03                                & 0.9332                                      & 7.46e-07    & 1.9562      \\
-		800  & 0.00063 & 5.97e-04                                & 0.9577                                      & 1.90e-07    & 1.9720      \\
-		1600 & 0.00031 & 3.04e-04                                & 0.9736                                      & 4.82e-08    & 1.9812      \\
-		\bottomrule
-	\end{tabular}
-	\caption{Análisis de convergencia temporal para $u_t = u_{xx} + f(x,t)$.}
-	\label{tab:p2_temporal}
-\end{table}
 
 \end{document}

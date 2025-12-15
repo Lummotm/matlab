@@ -159,29 +159,6 @@ if  length(N_values) > 1 || length(J_values) > 1
     print("-f2", "P2_h_fijo_var_k_" + nombre_metodo, "-dpng");
 end
 
-% Tabla
-
-[Grid_J, Grid_N] = meshgrid(J_values, N_values);
-Grid_h = 1 ./ Grid_J;
-Grid_k = T ./ Grid_N;
-
-Result_h = Grid_h(:);
-Result_k = Grid_k(:);
-Result_Time = Times(:);
-Result_Error = Errors(:);
-
-format shortE
-
-TablaResultados = table(Result_h, Result_k, Result_Time, Result_Error, ...
-    'VariableNames', {'Valor h', 'Valor k', 'Tiempo', 'Error'});
-
-% Uso frpintf porque disp(' ') no es consistente para forzar salto de línea
-fprintf("\n");
-disp(['Tabla de Convergencia: Método ', method_names{choiceMethod}]);
-fprintf("\n");
-disp(TablaResultados);
-
-
 end
 
 
