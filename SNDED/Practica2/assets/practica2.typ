@@ -1,23 +1,57 @@
 #set page(
   paper: "a4",
 )
+
+#set text(
+  lang: "es",
+  font: "New Computer Modern Math",
+)
+
+// Solo numerar ecuaciones especificas (sacado de la documentación)
+
 #let equ(eq, id: none) = {
   let body = if type(id) == none { eq } else if type(id) == label [#eq #id] else [#eq <#id>]
   let numbering = if type(id) != none { "(1)" } else { none }
   set math.equation(numbering: numbering)
   body
 }
+
 #set math.equation(supplement: none)
 
-= Práctica 2 (Ejercicio 6)
-David Nikolov Yordanov
+// Portada
+#align(center, [
+  #v(5cm)
+
+  // Título del Trabajo
+  #box(text(size: 20pt, weight: "bold", [Práctica 2 (Elementos Finitos)]))
+  #v(0.2cm)
+  #box(text(size: 14pt, [David Nikolov Yordanov]))
+  #v(0.2cm)
+  #box(text(size: 12pt, [15/12/2025]))
+
+  #v(4cm)
+  // Índice
+  #set align(left)
+
+  #outline(
+    title: "Índice",
+    depth: 4,
+  )
+])
+
+#pagebreak()
+
+== Introducción
 
 Queremos aproximar la ecuación eliptica:
 $ -u'' + u = f(x), " " u(0) = u(1) = 0 $
 
 donde $f(x) = (1 + pi^2) sin(pi x)$.
 
-== La aproximación
+La solución analítica exacta de esta ecuación diferencial, con las condiciones de contorno dadas y la función fuente $f(x)$, es:
+$ u(x) = sin(pi x) $
+
+== Discretizado del espacio
 
 Consideramos una función test, $v in V = H^1_0 = { v in S^1: v(0) = v(1) = 0 }$.
 
@@ -31,13 +65,13 @@ Integrando en $[0,1]$ tenemos:
 Aplicando la regla de la cadena en el primer término de la suma:
 $ integral_0^1 -u''v " " d x = underbrace([-u'v]_0^1, 0) + integral_0^1 u'v' " " d x = integral_0^1 u'v " " d x $
 
-Volviendo a la ecuación @eq:eq1 tenemos que la expresión en forma débil será:
+Volviendo a la ecuación *(@eq:eq1)* tenemos que la expresión en forma débil será:
 
 $ integral_0^1 u' v' " "d x + integral_0^1 u v " " d x = integral_0^1 f v " " d x $
 
 Consideramos ahora el Método Galerkin, es decir, trabajamos en un espacio discreto $V_h subset V$, como el espacio es finito podemos considerar una base del mismo ${phi_i (x)}_(i=1)^N$.
 
-La solución aproximada se definira como $u_h (x) = sum_(j=1)^N c_j phi_j (x)$. Como la funciónn base se puede expresar como suma de coeficientes de las $phi_i$ entonces trabajamos con estas en vez de $v$.
+La solución aproximada se definirá como $u_h (x) = sum_(j=1)^N c_j phi_j (x)$. Como la función base se puede expresar como suma de coeficientes de las $phi_i$ entonces trabajamos con estas en vez de $v$.
 
 Llevando la aproximación a la formulación débil nos deja con:
 $
@@ -74,62 +108,62 @@ $
 
 Consideramos primero un intervalo de referencia $[0,1]$, y definimos las funciones base lineales en este intervalo:
 $
-      psi_1(zeta) = zeta "  " & psi_1 ' (zeta) = 1 \
-  psi_2(zeta) = 1 - zeta "  " & psi_2 ' (zeta) = -1
+      psi_1(z) = z "  " & psi_1 ' (z) = 1 \
+  psi_2(z) = 1 - z "  " & psi_2 ' (z) = -1
 $
 
 Que cumplen $psi_1 (0) = psi_2 (1) = 0 ", " psi_1(1) = psi_2(0) = 1$.
 
-El cambio de parametro será: $x(zeta) = x_j + zeta h$, luego $d x = h d zeta$.
+El cambio de parametro será: $x(z) = x_j + z h$, luego $d x = h d z$.
 
-=== Matrices de masa y rigidez
+=== Matrices de Masa ($M$) y Rigidez ($K$)
 
-Sabemos las considerando el cambio al intervalo de referencia los coeficientes serán de la forma:
+Considerando el cambio al intervalo de referencia, los coeficientes serán:
 // falta pasar bien la sección del calculo esta en la tablet
 $
-  M_(i j) = integral_Omega phi_i phi_j " " d x = integral_0^1 psi_i psi_j " " h d zeta =h integral_0^1 psi_i psi_j " " d zeta
+  M_(i j) = integral_Omega phi_i phi_j " " d x = integral_0^1 psi_i psi_j " " h d z =h integral_0^1 psi_i psi_j " " d z
 $
 $
-  K_(i j) = integral_Omega phi_i ' phi_j ' " " d x = integral_0^1 psi_i ' 1/h " " psi_j ' " " 1/h " " h " " d zeta = 1/h integral_0^1 psi_i ' psi_j ' d zeta
+  K_(i j) = integral_Omega phi_i ' phi_j ' " " d x = integral_0^1 psi_i ' 1/h " " psi_j ' " " 1/h " " h " " d z = 1/h integral_0^1 psi_i ' psi_j ' d z
 $
 
 Consideramos pues las diferentes posiciones principales para $M$, es decir:
 $
   M_(j j) & = integral_(x_(j-1))^(x_(j+1)) phi_j^2 d x
-            = integral_(x_(j-1))^x_j phi_j^2 d x + integral_(x_(j))^x_(x_(j+1)) phi_j^2 d x \
-          & = underbrace(integral_0^1 psi_1^2 h " " d zeta, "parte que baja") + underbrace(integral_0^1 psi_2^2 h " " d zeta, "parte que sube")
-            = underbrace(2 h integral_0^1 (1 - zeta)^2 d zeta, "simetría de las funciones") =(2h)/3
+            = integral_(x_(j-1))^x_j phi_j^2 d x + integral_(x_(j))^(x_(j+1)) phi_j^2 d x \
+          & = underbrace(integral_0^1 psi_1^2 h " " d z, "parte que baja") + underbrace(integral_0^1 psi_2^2 h " " d z, "parte que sube")
+            = underbrace(2 h integral_0^1 (1 - z)^2 d z, "simetría de las funciones") =(2h)/3
 $
 $
   M_(j j-1) = integral_x_(j-1)^x_j phi_j phi_(j-1) d x
-  = integral_0^1 underbrace((1-zeta), phi_j "baja") underbrace(zeta, phi_(j-1) "sube") h " " d zeta
+  = integral_0^1 underbrace((1-z), phi_j "baja") underbrace(z, phi_(j-1) "sube") h " " d z
   = h/6
 $
 $
   M_(j j+1) = integral_x_(j-1)^x_j phi_j phi_(j+1) d x
-  = integral_0^1 underbrace(zeta, phi_(j) "sube")
-  underbrace((1-zeta), phi_(j+1) "baja") h " " d zeta
+  = integral_0^1 underbrace(z, phi_(j) "sube") " "
+  underbrace((1-z), phi_(j+1) "baja") h " " d z
   = h/6
 $
 
 #pagebreak()
 
-Las derivadas de las funciones $psi_i$ son o $1$ o $-1$.
+Las derivadas de las funciones $psi_i$ son $1$ o $-1$.
 
 Consideramos ahora las posiciones de $K$, es decir:
 
 $
   K_(j j) & = integral_(x_(j-1))^(x_(j+1)) (phi_j ')^2 d x
-            = underbrace(integral_0^1 (1/h)^2 " " h " " d zeta, "parte que sube")
-            + underbrace(integral_0^1 (-1/h)^2 h " "d zeta, "parte que baja")
-            = 2 1/h integral_0^1 d zeta = 2/h
+            = underbrace(integral_0^1 (1/h)^2 " " h " " d z, "parte que sube")
+            + underbrace(integral_0^1 (-1/h)^2 h " "d z, "parte que baja")
+            = 2 1/h integral_0^1 d z = 2/h
 $
 $
-  K_(j j-1) & = underbrace(integral_(x_(j-1))^(x_(j)) phi_(j-1) ' phi_j ' d x, "no nulo en" [x_(j-1),x_j]) = integral_0^1 -1/h dot 1/h " " h d zeta = -1/h = -1/h
+  K_(j j-1) & = underbrace(integral_(x_(j-1))^(x_(j)) phi_(j-1) ' phi_j ' d x, "no nulo en" [x_(j-1),x_j]) = integral_0^1 -1/h dot 1/h " " h d z = -1/h
 $
 
 $
-  K_(j j+1) & = underbrace(integral_(x_(j+1))^(x_j) phi_(j) ' phi_(j+1) ' d x, "no nulo un " [x_j, x_(j+1)]) = integral_0^1 -1/h dot 1/h " " h d zeta = -1/h
+  K_(j j+1) & = underbrace(integral_(x_(j+1))^(x_j) phi_(j) ' phi_(j+1) ' d x, "no nulo un " [x_j, x_(j+1)]) = integral_0^1 -1/h dot 1/h " " h d z = -1/h
 $
 
 Entonces las matrices serán de la forma:
@@ -154,12 +188,12 @@ $
   )
 $
 
-=== Cálculo del Vector de Carga (F)
+=== Cálculo del Vector de Carga ($F$)
 
 El término de la fuerza $F$ se calcula ensamblando las contribuciones locales.
 
 $
-  F_i = integral_0^1 f(x(zeta)) phi_i (x(zeta)) h d zeta
+  F_i = integral_0^1 f(x(z)) phi_i (x(z)) h d z
 $
 
 
@@ -167,21 +201,26 @@ $
 
 == Elementos Cuadráticos
 
-Para mejorar el orden de convergencia, consideramos el espacio de elementos finitos cuadráticos a trozos. En el elemento de referencia $[0,1]$, utilizamos tres funciones de forma (Lagrange de orden 2):
+Trabajamos ahora con los polinomios cuadráticos a trozos.
+
+A diferencia de los elementos lineales, introducimos un nodo interno en cada elemento. Esto implica que las funciones de base asociadas a los vértices tienen soporte en 2 elementos (como en el caso lineal), mientras que las de los nodos centrales tienen soporte únicamente en el propio elemento.
+
+El tamaño del elemento es $h = x_(2k+1) - x_(2k-1)$, que es uniforme para todos los elementos al ser la malla equiespaciada.
+
+Utilizamos el intervalo de referencia $[0,1]$ y las funciones de forma cuadráticas (polinomios de Lagrange):
 
 $
-  psi_1(zeta) = (1-zeta)(1-2zeta) "   " psi_1 '(zeta) & = 4 zeta - 3 \
-      psi_2(zeta) = 4zeta(1-zeta) "   " psi_2 '(zeta) & = 4 ( 1 - 2 zeta) \
-       psi_3(zeta)= zeta(2zeta-1) "   " psi_3 '(zeta) & = 4 zeta - 1
+  phi_1(z) = (2z-1)(z-1) = 2z^2 - 3z + 1 \
+  phi_2(z) = 4z(1-z) = 4z - 4z^2 \
+  phi_3(z) = z(2z-1) = 2z^2 - z
 $
 
-Estas funciones satisfacen $psi_1(0)=1$, $psi_2(1/2)=1$ y $psi_3(1)=1$.
+=== Matrices Elementales
+La construcción del sistema global se basa en el cálculo previo de las matrices locales sobre el intervalo de referencia.
 
-=== Matrices Elementales Cuadráticas
+*Matriz de Masa ($M^e$):*
+Calculando las integrales $integral_0^1 phi_i phi_j$, obtenemos:
 
-Al integrar estas funciones en $[0,1]$, obtenemos matrices locales de dimensión $3 times 3$.
-
-*Matriz de Masa Local ($M^e$):*
 $
   M^e = h/30 mat(
     4, 2, -1;
@@ -190,32 +229,71 @@ $
   )
 $
 
-*Matriz de Rigidez Local ($K^e$):*
+*Matriz de Rigidez ($K^e$):*
+Calculando las integrales de las derivadas $integral_0^1 phi_i ' phi_j '$, obtenemos:
+
 $
-  K^e = 1/(3h) mat(
+  K^e = 1/(3 h) mat(
     7, -8, 1;
     -8, 16, -8;
     1, -8, 7
   )
 $
 
-El ensamblaje produce matrices globales se realiza sumando las contribuciones de las matrices en los respectivos nodos compartidos por elemento.
+=== Ensamblaje Global y Lógica de Índices
+
+Las matrices globales se construyen mediante el proceso de ensamblaje, sumando las contribuciones locales calculadas en cada elemento. Aunque el sistema a resolver es global, el cómputo de las integrales se realiza localmente y sus valores se acumulan en las posiciones correspondientes de la matriz del sistema.
+
+La correspondencia entre la numeración local del elemento $k$ (donde $k=1,...,N$) y la global es:
+- Nodo local 1 (Izquierda) $->$ Índice global $2k - 1$
+- Nodo local 2 (Centro) $->$ Índice global $2k$
+- Nodo local 3 (Derecha) $->$ Índice global $2k + 1$
+
+Esto genera una estructura donde:
+1. Los nodos pares (centros) solo reciben contribución de su propio elemento (coeficiente central de las matrices locales).
+2. Los nodos impares (fronteras) suman las contribuciones del elemento anterior (nodo local 3) y del actual (nodo local 1).
 
 #pagebreak()
-== Resultados Numéricos
+
+=== Vector de Carga ($F$)
+El vector de carga se calcula elemento a elemento, transformando la integral al intervalo de referencia $[0,1]$ mediante el cambio de variable $x = x_(2k-1) + z h$.
+
+Para cada elemento $k$, se calculan tres integrales locales numéricamente (usando Simpson, Punto Medio, etc.):
+$
+  I_1 = integral_0^1 f(x_(2k-1) + z h) dot phi_1(z) dot h d z \
+  I_2 = integral_0^1 f(x_(2k-1) + z h) dot phi_2(z) dot h d z \
+  I_3 = integral_0^1 f(x_(2k-1) + z h) dot phi_3(z) dot h d z
+$
+
+Estas contribuciones se acumulan en el vector global $F$ en las posiciones correspondientes:
+$
+  F(2k-1) & arrow.l F(2k-1) + I_1 \
+    F(2k) & arrow.l F(2k) + I_2 \
+  F(2k+1) & arrow.l F(2k+1) + I_3
+$
+
+Finalmente, se imponen las condiciones de contorno de Dirichlet nulas eliminando la primera y última fila/columna del sistema ($u_1 = u_(2N+1) = 0$).
+
+#pagebreak()
+
+== Resultados y Análisis de la Convergencia
 
 Se ha implementado el método en MATLAB para mallas uniformes. Un aspecto crítico observado durante la experimentación es la influencia de la integración numérica en el cálculo del vector de carga $F$.
 
-=== Comparación de Cuadraturas
+Para evaluar la convergencia, medimos el error en la norma $L^2(Omega)$, definido como:
+$ ||u - u_h||_(L^2) = ( integral_0^1 |u(x) - u_h (x)|^2 d x )^(1/2) $
+Dado que $u_h$ es un polinomio a trozos, esta integral se calcula como la suma de las integrales sobre cada elemento.
 
-Se probaron tres métodos de integración para calcular $integral f phi_i$: Rectángulo, Punto Medio y Simpson. A continuación se muestran las pendientes de convergencia ($p$) obtenidas experimentalmente ($E approx C h^p$) para cada caso:
+=== Comparación de las Cuadraturas
+
+Se probaron tres métodos de integración numérica para calcular el vector de carga $F$: Rectángulo, Punto Medio y Simpson. A continuación se muestran las pendientes de convergencia ($p$) obtenidas experimentalmente ($E approx C h^p$) para cada caso:
 
 #figure(
   table(
     columns: (auto, auto, auto),
     inset: 10pt,
     align: center,
-    [*Método de Integración*], [*Pendiente Lineal ($p$)*], [*Pendiente Cuadrática ($p$)*],
+    [*Método de Integración*], [*Pendiente Lineal ($P_1$)*], [*Pendiente Cuadrática ($P_2$)*],
     [Rectángulo (Izq)], [2.00], [2.00],
     [Punto Medio], [2.00], [2.01],
     [Simpson], [2.00], [3.00],
@@ -223,14 +301,7 @@ Se probaron tres métodos de integración para calcular $integral f phi_i$: Rect
   caption: [Orden de convergencia observado según la regla de cuadratura.],
 )
 
-*Análisis:*
-- Para *elementos lineales*, el error teórico es $O(h^2)$. Cualquier cuadratura de orden al menos 1 o 2 es suficiente, por lo que todos los métodos arrojan la pendiente correcta $p approx 2$.
-- Para *elementos cuadráticos*, el error teórico es $O(h^3)$. Sin embargo, al usar reglas de bajo orden (Rectángulo o Punto Medio), el error de integración numérica es $O(h^2)$. Este error domina sobre el error de aproximación, degradando la convergencia global a $p approx 2$.
-- Solo al utilizar la *Regla de Simpson* (orden superior), el error de integración se vuelve despreciable frente al de aproximación, permitiendo recuperar el orden óptimo $p approx 3$.
-
-=== Tabla de Convergencia (Usando Simpson)
-
-A continuación se detallan los errores absolutos utilizando la cuadratura adecuada (Simpson).
+A continuación se detallan los errores absolutos específicos utilizando la cuadratura adecuada (Simpson), confirmando los órdenes óptimos:
 
 #figure(
   table(
@@ -243,9 +314,16 @@ A continuación se detallan los errores absolutos utilizando la cuadratura adecu
     [40], [0.025], [3.68e-4], [1.97e-6],
     [80], [0.0125], [9.20e-5], [2.46e-7],
   ),
-  caption: [Evolución del error $L^2$.],
+  caption: [Evolución del error $L^2$ usando Simpson.],
 )
 
-El análisis logarítmico con estos datos confirma que:
-1. Los elementos lineales convergen como $O(h^2)$.
-2. Los elementos cuadráticos convergen como $O(h^3)$.
+==== Análisis de la degradación del orden
+
+El error numérico total tiene dos fuentes principales: el error de aproximación del método ($E_("aprox")$) y el error cometido al calcular las integrales ($E_("int")$).
+$ "Error Total" approx E_("aprox") + E_("int") $
+
+1. *Elementos Lineales ($P_1$):* El método tiene un orden teórico $O(h^2)$. Como todas las cuadraturas usadas tienen al menos precisión $O(h^2)$, el error de integración no empeora el resultado.
+
+2. *Elementos Cuadráticos ($P_2$):* El método debería converger a $O(h^3)$.
+  - Al usar *Rectángulo o Punto Medio*, el error de integración es $O(h^2)$. Para $h$ pequeño, este error es mucho mayor que el del método ($h^2 >> h^3$), por lo que "domina" y limita la convergencia global a 2.
+  - Al usar *Simpson*, el error de integración es $O(h^4)$. Al ser mucho más pequeño que el error del método ($h^4 << h^3$), se vuelve despreciable. Esto permite que se manifieste el orden real del elemento finito, recuperando la convergencia teórica $O(h^3)$.

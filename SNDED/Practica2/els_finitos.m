@@ -173,8 +173,6 @@ switch integrationMethod
 
     case 3 % Simpson
         val = (h / 6) * (f(a) + 4*f((a+b)/2) + f(b));
-    case 4 
-
 
 end
 end
