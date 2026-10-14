@@ -1,0 +1,15 @@
+# Bloquear PDFs generados
+*.pdf
+
+# Archivos locales con datos personales
+autor.tex
+autor.txt
+
+# Basura de compilación de LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
